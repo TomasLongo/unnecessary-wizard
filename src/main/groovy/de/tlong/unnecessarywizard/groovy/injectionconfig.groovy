@@ -69,6 +69,11 @@ public class InjectionConfig implements Configuration {
     String getConfigType() {
         return type
     }
+
+    @Override
+    int getInjectionTargetCount() {
+        return injectionTargets.size()
+    }
 }
 
 //config = new InjectionConfig()

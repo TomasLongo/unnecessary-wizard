@@ -30,5 +30,6 @@ public class TestInjection {
         assertThat(injectionConfig, notNullValue());
         assertThat(injectionConfig.getConfigName(), equalTo("SuperInjector"));
         assertThat(injectionConfig.getConfigType(), equalTo("Debug"));
+        assertThat(injectionConfig.getInjectionTargetCount(), equalTo(3));
     }
 }
