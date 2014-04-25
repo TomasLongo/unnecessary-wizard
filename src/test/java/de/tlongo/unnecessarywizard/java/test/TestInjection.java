@@ -24,6 +24,11 @@ public class TestInjection {
     public void testInjection() {
         Wizard wizard = new Wizard(config.getString("resources.baseuri") + TESTSCRIPT);
 
-        assertThat(wizard.getInjectionConfig(), notNullValue());
+        de.tlongo.unneccesarywizard.java.core.Configuration injectionConfig =
+                wizard.getInjectionConfig();
+
+        assertThat(injectionConfig, notNullValue());
+        assertThat(injectionConfig.getConfigName(), equalTo("SuperInjector"));
+        assertThat(injectionConfig.getConfigType(), equalTo("Debug"));
     }
 }
