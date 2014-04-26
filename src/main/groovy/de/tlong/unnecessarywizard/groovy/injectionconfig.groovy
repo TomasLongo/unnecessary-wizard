@@ -11,20 +11,20 @@ import de.tlongo.unneccesarywizard.java.core.Configuration
 public class InjectionConfig implements Configuration {
     String name
     String type
-    def injectionTargets = []
+    def injectionTargetList = [:]
     def packagesToScan = []
 
     def injectionTarget(targetName, fields) {
         println 'processing target'
         InjectionTarget target = new InjectionTarget()
 
-        target.name = targetName
+        target.targetName = targetName
         fields.entrySet().each {
             println "adding '${it.key}:${it.value} to '${targetName}"
             target.fields[it.key] = it.value
         }
 
-        injectionTargets << target
+        injectionTargetList[targetName] = target
     }
 
     def invokeMethod(String methodName, args) {
@@ -47,13 +47,13 @@ public class InjectionConfig implements Configuration {
     def String toString() {
         def dump = new StringBuffer()
         dump << "Dumping InjectionConfig\n"
-        dump << "name:${name}\n"
+        dump << "targetName:${name}\n"
         dump << "type:${type}\n"
         dump << "packages to scan\n"
         packagesToScan.each {item ->
             dump << item + "\n"
         }
-        injectionTargets.each {
+        injectionTargetList.each {
             dump << it.toString() + "\n"
         }
 
@@ -72,7 +72,17 @@ public class InjectionConfig implements Configuration {
 
     @Override
     int getInjectionTargetCount() {
-        return injectionTargets.size()
+        return injectionTargetList.size()
+    }
+
+    @Override
+    List<Configuration.InjectionTarget> getInjectionTargets() {
+        return injectionTargetList.values().toList();
+    }
+
+    @Override
+    Configuration.InjectionTarget getInjectionTarget(String name) {
+        return injectionTargetList[name];
     }
 }
 
