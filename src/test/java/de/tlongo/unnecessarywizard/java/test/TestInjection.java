@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.*;
 
 import de.tlongo.unneccesarywizard.java.core.Configuration;
 import de.tlongo.unneccesarywizard.java.core.Wizard;
+import de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.BeforeClass;
@@ -47,5 +48,17 @@ public class TestInjection {
         Map<String, String> injectableFields = target.getFields();
         assertThat(injectableFields.size(), equalTo(1));
         assertThat(injectableFields.get("fieldNameOne"), equalTo("classToInject"));
+    }
+
+    @Test
+    public void testInjection() throws InstantiationException, IllegalAccessException {
+        Wizard wizard = new Wizard(config.getString("resources.baseuri") + "stringinjection.groovy");
+
+        SimpleStringInjection object = wizard.createObjectGraph(SimpleStringInjection.class);
+
+        assertThat(object, notNullValue());
+        assertThat(object.getFieldToInject(), equalTo("This string was injected"));
+        assertThat(object.getSecondField(),   equalTo("If this works..."));
+        assertThat(object.getThirdField(),    equalTo("I go nuts"));
     }
 }
