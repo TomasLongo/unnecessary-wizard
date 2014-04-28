@@ -1,12 +1,12 @@
 package de.tlongo.unneccesarywizard.java.core;
 
 import groovy.lang.GroovyClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by tolo on 16.04.2014.
@@ -14,8 +14,11 @@ import java.util.Set;
 public class Wizard {
     private Configuration injectionConfig;
 
+    Logger logger = LoggerFactory.getLogger(Wizard.class);
+
     public Wizard(String configFile) {
-        System.out.println("Loading config file " + configFile);
+        logger.info("Initializing the wizard with config file: " + configFile);
+
         injectionConfig = evaluateConfigScript(configFile);
     }
 
@@ -29,11 +32,11 @@ public class Wizard {
 
             return dsl.createConfig(script);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("An error occured evaluating the config script", e);
         } catch (InstantiationException e) {
-            e.printStackTrace();
+            logger.error("An error occured evaluating the config script", e);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            logger.error("An error occured evaluating the config script", e);
         }
 
         return null;
@@ -44,20 +47,22 @@ public class Wizard {
     }
 
     public <T> T createObjectGraph(Class<T> clazz) throws IllegalAccessException, InstantiationException {
-        // Get injection target for passed class
-        Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(clazz.getName());
+        String targetName = clazz.getName();
+        logger.debug("creating object graph for target: " + targetName);
+        Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(targetName);
         if (target == null) {
-            throw new IllegalArgumentException("Could not find injectionTarget for class " + clazz.getName());
+            throw new IllegalArgumentException("Could not find InjectionTarget for class " + targetName);
         }
 
         final T targetObject = clazz.newInstance();
 
         // Inject values into fields of target
         target.getFields().forEach((k, v) -> {
-            //Check for the type of the field using reflection
             String fieldName = k;
             try {
                 Field field = clazz.getDeclaredField(fieldName);
+
+                //Check for the type of the field using reflection
                 if (field.getType() == String.class) {
                     boolean isAccessible = field.isAccessible();
                     field.setAccessible(true);
@@ -65,9 +70,9 @@ public class Wizard {
                     field.setAccessible(isAccessible);
                 }
             } catch (NoSuchFieldException e) {
-                e.printStackTrace();
+                logger.error("Field " + fieldName + "could not be found in target " + targetName);
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                logger.error("Not allowed to access field " + fieldName);
             }
         });
 

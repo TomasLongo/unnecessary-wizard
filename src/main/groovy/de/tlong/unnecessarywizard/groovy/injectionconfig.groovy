@@ -1,6 +1,8 @@
 package de.tlong.unnecessarywizard.groovy
 
 import de.tlongo.unneccesarywizard.java.core.Configuration
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Created by tolo on 15.04.2014.
@@ -14,13 +16,16 @@ public class InjectionConfig implements Configuration {
     def injectionTargetList = [:]
     def packagesToScan = []
 
+    Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
+
     def injectionTarget(targetName, fields) {
-        println 'processing target'
+        logger.debug("Creating injection target ${targetName}")
+
         InjectionTarget target = new InjectionTarget()
 
         target.targetName = targetName
         fields.entrySet().each {
-            println "adding '${it.key}:${it.value} to '${targetName}"
+            logger.debug("adding '${it.key}:${it.value} to '${targetName}")
             target.fields[it.key] = it.value
         }
 
@@ -31,7 +36,7 @@ public class InjectionConfig implements Configuration {
         if (methodName == "name") {
             name = args[0]
         } else if (methodName == "packagesToScan") {
-            println 'processing packages...'
+            logger.debug('processing packages...')
             println args[0]
             def packagesList = args[0]
             packagesList.each { item ->
@@ -40,7 +45,7 @@ public class InjectionConfig implements Configuration {
         } else if (methodName == "type") {
             type = args[0]
         } else {
-            println "Not defined method '${methodName}'i was called"
+            logger.warning("Unknown property found: ${methodName}")
         }
     }
 
