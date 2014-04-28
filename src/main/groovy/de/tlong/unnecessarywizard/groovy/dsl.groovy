@@ -2,6 +2,8 @@ package de.tlong.unnecessarywizard.groovy
 
 import de.tlongo.unneccesarywizard.java.core.Configuration
 import de.tlongo.unneccesarywizard.java.core.DSLProcessor
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Created by tolo on 15.04.2014.
@@ -9,8 +11,10 @@ import de.tlongo.unneccesarywizard.java.core.DSLProcessor
 
 
 class DSL implements DSLProcessor {
+    static Logger logger = LoggerFactory.getLogger(DSL.class)
+
     public static Configuration createFromScript(String scriptName) {
-        println 'starting to process config script'
+        logger.debug("Creating configuration from script " + scriptName)
         InjectionConfig config = new InjectionConfig()
 
         Script script = new GroovyShell().parse(new File(scriptName))
@@ -20,7 +24,6 @@ class DSL implements DSLProcessor {
         }
         script.run()
 
-        println "config: ${config}"
         return (Configuration)config
     }
 
