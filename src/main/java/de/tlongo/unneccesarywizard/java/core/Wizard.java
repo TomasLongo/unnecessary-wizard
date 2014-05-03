@@ -11,6 +11,13 @@ import java.lang.reflect.Field;
 /**
  * Created by tolo on 16.04.2014.
  */
+
+/**
+ * The main actor of the DI-Container.
+ *
+ * Responsible for creating objects with all their dependencies
+ * according to the rules of a Configuration.
+ */
 public class Wizard {
     private Configuration injectionConfig;
 
@@ -22,6 +29,12 @@ public class Wizard {
         injectionConfig = evaluateConfigScript(configFile);
     }
 
+    /**
+     * Creates a configuration based on a config script.
+     *
+     * @param script The name of the config script.
+     *
+     */
     private Configuration evaluateConfigScript(String script) {
         ClassLoader javaLoader = getClass().getClassLoader();
         GroovyClassLoader groovyLoader = new GroovyClassLoader(javaLoader);
@@ -46,6 +59,15 @@ public class Wizard {
         return injectionConfig;
     }
 
+    /**
+     * Creates an instance of a class with all its dependencies.
+     *
+     * @param clazz The class of the object that should be created.
+     * @param <T>   The type of the Object that should be created.
+     *
+     * @throws IllegalAccessException If a field of the class is not accessible
+     * @throws InstantiationException If it was not possible to create an instance of T.
+     */
     public <T> T createObjectGraph(Class<T> clazz) throws IllegalAccessException, InstantiationException {
         String targetName = clazz.getName();
         logger.debug("creating object graph for target: " + targetName);
