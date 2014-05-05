@@ -84,13 +84,7 @@ public class Wizard {
             try {
                 Field field = clazz.getDeclaredField(fieldName);
 
-                //Check for the type of the field using reflection
-                if (field.getType() == String.class) {
-                    boolean isAccessible = field.isAccessible();
-                    field.setAccessible(true);
-                    field.set(targetObject, v);
-                    field.setAccessible(isAccessible);
-                }
+                setFieldViaReflection(targetObject, field, v);
             } catch (NoSuchFieldException e) {
                 logger.error("Field " + fieldName + "could not be found in target " + targetName);
             } catch (IllegalAccessException e) {
@@ -99,5 +93,12 @@ public class Wizard {
         });
 
         return targetObject;
+    }
+
+    private void setFieldViaReflection(Object object, Field field, Object value) throws IllegalAccessException {
+        boolean isAccessible = field.isAccessible();
+        field.setAccessible(true);
+        field.set(object, value);
+        field.setAccessible(isAccessible);
     }
 }

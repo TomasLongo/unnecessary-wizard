@@ -25,7 +25,7 @@ public class InjectionConfig implements Configuration {
 
         target.targetName = targetName
         fields.entrySet().each {
-            logger.debug("adding '${it.key}:${it.value} to '${targetName}")
+            logger.debug("adding '${it.key}:${it.value}' to '${targetName}'")
             target.fields[it.key] = it.value
         }
 
