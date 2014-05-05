@@ -46,7 +46,7 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
         return targetName
     }
 
-    Map<String, String> getFields() {
+    Map<String, Object> getFields() {
         return fields;
     }
 

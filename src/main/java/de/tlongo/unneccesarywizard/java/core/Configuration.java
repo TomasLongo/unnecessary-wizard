@@ -25,7 +25,7 @@ public interface Configuration {
          *
          * @return
          */
-        Map<String, String> getFields();
+        Map<String, Object> getFields();
     }
 
     String getConfigName();
