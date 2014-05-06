@@ -19,4 +19,16 @@ public class SimpleStringInjection {
     public String getFieldToInject() {
         return fieldToInject;
     }
+
+    public void setFieldToInject(String fieldToInject) {
+        this.fieldToInject = fieldToInject;
+    }
+
+    public void setSecondField(String secondField) {
+        this.secondField = secondField;
+    }
+
+    public void setThirdField(String thirdField) {
+        this.thirdField = thirdField;
+    }
 }

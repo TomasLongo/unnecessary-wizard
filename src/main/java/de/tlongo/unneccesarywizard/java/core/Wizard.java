@@ -1,12 +1,15 @@
 package de.tlongo.unneccesarywizard.java.core;
 
 import groovy.lang.GroovyClassLoader;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * Created by tolo on 16.04.2014.
@@ -84,21 +87,64 @@ public class Wizard {
             try {
                 Field field = clazz.getDeclaredField(fieldName);
 
-                setFieldViaReflection(targetObject, field, v);
+                //TODO What is the type of 'v' here? This is important for the following generic method in the next line.
+                setFieldViaSetterInjection(targetObject, field, v);
+                //setFieldViaReflection(targetObject, field, v);
             } catch (NoSuchFieldException e) {
                 logger.error("Field " + fieldName + "could not be found in target " + targetName);
-            } catch (IllegalAccessException e) {
-                logger.error("Not allowed to access field " + fieldName);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
             }
         });
 
         return targetObject;
     }
 
+    /**
+     * Sets a field of an object by directly accessing the field
+     * via reflection.
+     *
+     * Throws an IllegalAccessException if the can not be accessed
+     * via reflection.
+     *
+     * @param object    The object, which´s field should be set.
+     * @param field     The field, that should be set.
+     * @param value     The new value of the field.
+     *
+     * @throws IllegalAccessException
+     */
     private void setFieldViaReflection(Object object, Field field, Object value) throws IllegalAccessException {
         boolean isAccessible = field.isAccessible();
         field.setAccessible(true);
         field.set(object, value);
         field.setAccessible(isAccessible);
+    }
+
+    /**
+     * Sets the field of an object by invoking the appropriate setter on the object.
+     *
+     * Throws a NoSuchMethodException if the object´s class doesnt declare a setter
+     * for the field.
+     *
+     * TODO Param field is only used to provide the type for the retrieval of the method. Maybe the method can this by itself by providing the field name
+     *
+     *
+     * @param object The object, which´s field should be set.
+     * @param field  The field, that should be set.
+     * @param value  The new value of the field.
+     * @param <T>    The type of the new value.
+     *
+     * @throws NoSuchMethodException
+     */
+    private <T> void setFieldViaSetterInjection(Object object, Field field, T value) throws NoSuchMethodException {
+        String methodName = "set" + StringUtils.capitalize(field.getName());
+        try {
+            Method setterMethod = object.getClass().getDeclaredMethod(methodName, field.getType());
+            setterMethod.invoke(object, value);
+        } catch (IllegalAccessException e) {
+            logger.error(String.format("Error invoking the method %s on class %s", methodName, object.getClass().getName()), e);
+        } catch (InvocationTargetException e) {
+            logger.error(String.format("Error invoking the method %s on class %s", methodName, object.getClass().getName()), e);
+        }
     }
 }
