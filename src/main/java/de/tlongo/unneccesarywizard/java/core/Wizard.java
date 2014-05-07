@@ -74,6 +74,7 @@ public class Wizard {
     public <T> T createObjectGraph(Class<T> clazz) throws IllegalAccessException, InstantiationException {
         String targetName = clazz.getName();
         logger.debug("creating object graph for target: " + targetName);
+
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(targetName);
         if (target == null) {
             throw new IllegalArgumentException("Could not find InjectionTarget for class " + targetName);
@@ -82,14 +83,10 @@ public class Wizard {
         final T targetObject = clazz.newInstance();
 
         // Inject values into fields of target
-        target.getFields().forEach((k, v) -> {
-            String fieldName = k;
+        target.getFields().forEach((fieldName, value) -> {
             try {
-                Field field = clazz.getDeclaredField(fieldName);
-
-                //TODO What is the type of 'v' here? This is important for the following generic method in the next line.
-                setFieldViaSetterInjection(targetObject, field, v);
-                //setFieldViaReflection(targetObject, field, v);
+                //TODO What is the type of 'value' here? This is important for the following generic method in the next line.
+                setFieldViaSetterInjection(targetObject, fieldName, value);
             } catch (NoSuchFieldException e) {
                 logger.error("Field " + fieldName + "could not be found in target " + targetName);
             } catch (NoSuchMethodException e) {
@@ -126,18 +123,18 @@ public class Wizard {
      * Throws a NoSuchMethodException if the object´s class doesnt declare a setter
      * for the field.
      *
-     * TODO Param field is only used to provide the type for the retrieval of the method. Maybe the method can this by itself by providing the field name
+     * TODO Param field is only used to provide the type for the retrieval of the method. Maybe the method can do this by itself by providing the field name
      *
      *
      * @param object The object, which´s field should be set.
-     * @param field  The field, that should be set.
      * @param value  The new value of the field.
-     * @param <T>    The type of the new value.
      *
      * @throws NoSuchMethodException
      */
-    private <T> void setFieldViaSetterInjection(Object object, Field field, T value) throws NoSuchMethodException {
-        String methodName = "set" + StringUtils.capitalize(field.getName());
+    private void setFieldViaSetterInjection(Object object, String fieldName, Object value) throws NoSuchMethodException, NoSuchFieldException {
+        Class klass = object.getClass();
+        Field field = klass.getDeclaredField(fieldName);
+        String methodName = "set" + StringUtils.capitalize(fieldName);
         try {
             Method setterMethod = object.getClass().getDeclaredMethod(methodName, field.getType());
             setterMethod.invoke(object, value);
