@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.*;
 
 import de.tlongo.unneccesarywizard.java.core.Configuration;
 import de.tlongo.unneccesarywizard.java.core.Wizard;
+import de.tlongo.unnecessarywizard.java.test.objects.ComplexObject;
 import de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection;
 import de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection;
 import org.apache.commons.configuration.ConfigurationException;
@@ -12,6 +13,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -79,5 +81,20 @@ public class TestInjection {
         assertThat((object.getFloatField() - 23.44f), lessThan(0.0000000001f));
         assertThat(object.getIntField(), equalTo(123));
         assertThat(object.getLongField(), equalTo(456L));
+    }
+
+
+    @Test
+    public void testComplexObjectInjection() throws Exception {
+        Wizard wizard = createWizard("complexinjection.groovy");
+
+        ComplexObject object = wizard.createObjectGraph(ComplexObject.class);
+
+        assertThat(object, notNullValue());
+
+        assertThat(object.getDecimalValue(), notNullValue());
+        assertThat(object.getDecimalValue(), equalTo(new BigDecimal("22.3")));
+
+        assertThat(object.getList(), notNullValue());
     }
 }

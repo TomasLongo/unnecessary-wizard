@@ -117,6 +117,16 @@ public class Wizard {
         field.setAccessible(isAccessible);
     }
 
+    private boolean isFieldPrimitive(Field field) {
+        Class klass = field.getType();
+        return (klass == Integer.class  ||
+                klass == Double.class   ||
+                klass == Long.class     ||
+                klass == Float.class    ||
+                klass == String.class   ||
+                klass.isPrimitive());
+    }
+
     /**
      * Sets the field of an object by invoking the appropriate setter on the object.
      *
@@ -135,13 +145,35 @@ public class Wizard {
         Class klass = object.getClass();
         Field field = klass.getDeclaredField(fieldName);
         String methodName = "set" + StringUtils.capitalize(fieldName);
+        logger.debug(String.format("Injecting %s into %s via method %s", field.getType().getName(), klass.getName(), methodName));
         try {
             Method setterMethod = object.getClass().getDeclaredMethod(methodName, field.getType());
-            setterMethod.invoke(object, value);
+
+            if (isFieldPrimitive(field)) {
+                //Just inject the primitive object as is
+                setterMethod.invoke(object, value);
+            } else {
+                if (! (value instanceof String)) {
+                    logger.info("Object to inject is already instantiated");
+                    //At this point we have an already instantiated object.
+                    //Just inject it.
+                    setterMethod.invoke(object, value);
+                } else {
+                    //We have a complex object here. We have to create an instance of it.
+                    String qualifiedName = (String) value;
+                    logger.debug(String.format("Instantiatin class to inject: %s", qualifiedName));
+                    Object injectionValue = Class.forName(qualifiedName).newInstance();
+                    setterMethod.invoke(object, injectionValue);
+                }
+            }
         } catch (IllegalAccessException e) {
             logger.error(String.format("Error invoking the method %s on class %s", methodName, object.getClass().getName()), e);
         } catch (InvocationTargetException e) {
             logger.error(String.format("Error invoking the method %s on class %s", methodName, object.getClass().getName()), e);
+        } catch (ClassNotFoundException e) {
+            logger.error(String.format("Could not create value to inject %s", (String) value), e);
+        } catch (InstantiationException e) {
+            logger.error(String.format("Could not create value to inject %s", (String) value), e);
         }
     }
 }
