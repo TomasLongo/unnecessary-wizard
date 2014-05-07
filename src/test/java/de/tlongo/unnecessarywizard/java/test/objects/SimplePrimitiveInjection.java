@@ -24,4 +24,20 @@ public class SimplePrimitiveInjection {
     public double getDoubleField() {
         return doubleField;
     }
+
+    public void setIntField(int intField) {
+        this.intField = intField;
+    }
+
+    public void setLongField(long longField) {
+        this.longField = longField;
+    }
+
+    public void setFloatField(float floatField) {
+        this.floatField = floatField;
+    }
+
+    public void setDoubleField(double doubleField) {
+        this.doubleField = doubleField;
+    }
 }
