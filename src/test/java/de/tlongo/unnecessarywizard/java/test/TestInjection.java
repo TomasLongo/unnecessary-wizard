@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
 import de.tlongo.unneccesarywizard.java.core.Configuration;
+import de.tlongo.unneccesarywizard.java.core.SetterInjector;
 import de.tlongo.unneccesarywizard.java.core.Wizard;
 import de.tlongo.unnecessarywizard.java.test.objects.ComplexObject;
 import de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection;
@@ -30,7 +31,9 @@ public class TestInjection {
     }
 
     private Wizard createWizard(String scriptName) {
-        return new Wizard(config.getString("resources.baseuri") + scriptName);
+        Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);;
+        wizard.setInjectionMethod(new SetterInjector());
+        return wizard;
     }
 
     @Test
