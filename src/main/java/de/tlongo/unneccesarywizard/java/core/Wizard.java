@@ -88,7 +88,7 @@ public class Wizard {
                 //TODO What is the type of 'value' here?
                 setFieldViaSetterInjection(targetObject, fieldName, value);
             } catch (NoSuchFieldException e) {
-                logger.error("Field " + fieldName + "could not be found in target " + targetName);
+                logger.warn("Field " + fieldName + "could not be found in target class " + targetName);
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             }
@@ -147,8 +147,9 @@ public class Wizard {
      * TODO Param field is only used to provide the type for the retrieval of the method. Maybe the method can do this by itself by providing the field name
      *
      *
-     * @param object The object, which´s field should be set.
-     * @param value  The new value of the field.
+     * @param object    The object, which´s field should be set.
+     * @param fieldName The name of the field that should be set.
+     * @param value     The new value of the field.
      *
      * @throws NoSuchMethodException
      */
