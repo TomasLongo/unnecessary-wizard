@@ -96,27 +96,4 @@ public class Wizard {
 
         return targetObject;
     }
-
-    /**
-     * Sets a field of an object by directly accessing the field
-     * via reflection.
-     *
-     * Throws an IllegalAccessException if the can not be accessed
-     * via reflection.
-     *
-     * @param object    The object, which´s field should be set.
-     * @param field     The field, that should be set.
-     * @param value     The new value of the field.
-     *
-     * @throws IllegalAccessException
-     */
-    private void setFieldViaReflection(Object object, Field field, Object value) throws IllegalAccessException {
-        boolean isAccessible = field.isAccessible();
-        field.setAccessible(true);
-        field.set(object, value);
-        field.setAccessible(isAccessible);
-    }
-
-
-
 }

@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
 import de.tlongo.unneccesarywizard.java.core.Configuration;
+import de.tlongo.unneccesarywizard.java.core.FieldInjector;
 import de.tlongo.unneccesarywizard.java.core.SetterInjector;
 import de.tlongo.unneccesarywizard.java.core.Wizard;
 import de.tlongo.unnecessarywizard.java.test.objects.ComplexObject;
