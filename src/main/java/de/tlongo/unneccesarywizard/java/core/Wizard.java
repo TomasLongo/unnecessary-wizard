@@ -85,7 +85,7 @@ public class Wizard {
         // Inject values into fields of target
         target.getFields().forEach((fieldName, value) -> {
             try {
-                //TODO What is the type of 'value' here? This is important for the following generic method in the next line.
+                //TODO What is the type of 'value' here?
                 setFieldViaSetterInjection(targetObject, fieldName, value);
             } catch (NoSuchFieldException e) {
                 logger.error("Field " + fieldName + "could not be found in target " + targetName);
@@ -117,6 +117,17 @@ public class Wizard {
         field.setAccessible(isAccessible);
     }
 
+    /**
+     * Checks if a field´s type is primitve.
+     *
+     * NOTE: Strings are treated as primitve as well.
+     * TODO Is the above mechanic good????
+     *
+     * @param field The field, which´s type should be checked.
+     *
+     * @return True if the type of the passed field is primitive.
+     *         False otherwise.
+     */
     private boolean isFieldPrimitive(Field field) {
         Class klass = field.getType();
         return (klass == Integer.class  ||
@@ -153,14 +164,16 @@ public class Wizard {
                 //Just inject the primitive object as is
                 setterMethod.invoke(object, value);
             } else {
+                //We have a complex object here.
                 if (! (value instanceof String)) {
-                    logger.info("Object to inject is already instantiated");
                     //At this point we have an already instantiated object.
                     //Just inject it.
+                    logger.info("Object to inject is already instantiated. Wizard will just inject it.");
                     setterMethod.invoke(object, value);
                 } else {
-                    //We have a complex object here. We have to create an instance of it.
-                    String qualifiedName = (String) value;
+                    // The config contains just the qualified name of the object.
+                    // Wizard has to get it´s class and instantiate it.
+                    String qualifiedName = (String)value;
                     logger.debug(String.format("Instantiatin class to inject: %s", qualifiedName));
                     Object injectionValue = Class.forName(qualifiedName).newInstance();
                     setterMethod.invoke(object, injectionValue);
@@ -171,9 +184,9 @@ public class Wizard {
         } catch (InvocationTargetException e) {
             logger.error(String.format("Error invoking the method %s on class %s", methodName, object.getClass().getName()), e);
         } catch (ClassNotFoundException e) {
-            logger.error(String.format("Could not create value to inject %s", (String) value), e);
+            logger.error(String.format("Could not create value to inject %s", (String)value), e);
         } catch (InstantiationException e) {
-            logger.error(String.format("Could not create value to inject %s", (String) value), e);
+            logger.error(String.format("Could not create value to inject %s", (String)value), e);
         }
     }
 }
