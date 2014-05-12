@@ -27,6 +27,7 @@ public class Wizard {
     Logger logger = LoggerFactory.getLogger(Wizard.class);
 
     InjectionMethod injectionMethod;
+    ClassInstantiator instantiator;
 
     public Wizard(String configFile) {
         logger.info("Initializing the wizard with config file: " + configFile);
@@ -36,6 +37,10 @@ public class Wizard {
 
     public void setInjectionMethod(InjectionMethod method) {
         this.injectionMethod = method;
+    }
+
+    public void setInstantiator(ClassInstantiator instantiator) {
+        this.instantiator = instantiator;
     }
 
     /**
@@ -58,6 +63,8 @@ public class Wizard {
         } catch (InstantiationException e) {
             logger.error("An error occured evaluating the config script", e);
         } catch (IllegalAccessException e) {
+            logger.error("An error occured evaluating the config script", e);
+        } catch (java.lang.InstantiationException e) {
             logger.error("An error occured evaluating the config script", e);
         }
 
@@ -86,14 +93,59 @@ public class Wizard {
             throw new IllegalArgumentException("Could not find InjectionTarget for class " + targetName);
         }
 
-        final T targetObject = clazz.newInstance();
+        final T targetObject = (T)instantiator.instantiate(clazz);
 
         // Inject values into fields of target
         target.getFields().forEach((fieldName, value) -> {
             //TODO What is the type of 'value' here?
-            injectionMethod.inject(targetObject, value, fieldName);
+            Field field = getFieldFromClass(clazz, fieldName);
+            if (isFieldPrimitive(field) || !(value instanceof String)) {
+                // Just inject the value as is if the field is primitive
+                injectionMethod.inject(targetObject, value, fieldName);
+            } else {
+                // We have a complex object here.
+                // Grab an instance and inject it.
+                Object objectToInject = instantiator.instantiate((String)value);
+                injectionMethod.inject(targetObject, objectToInject, fieldName);
+            }
         });
 
         return targetObject;
+    }
+
+    /**
+     * Gets a declared field from a class.
+     *
+     * @param klass
+     * @param fieldName
+     * @return
+     */
+    private Field getFieldFromClass(Class klass, String fieldName) {
+        try {
+            return klass.getDeclaredField(fieldName);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(String.format("Could not get field %s from class %s: no such field", fieldName, klass.getName()));
+        }
+    }
+
+    /**
+     * Checks if a field´s type is primitve.
+     *
+     * NOTE: Strings are treated as primitve as well.
+     * TODO Is the above mechanic good????
+     *
+     * @param field The field, which´s type should be checked.
+     *
+     * @return True if the type of the passed field is primitive.
+     *         False otherwise.
+     */
+    private boolean isFieldPrimitive(Field field) {
+        Class klass = field.getType();
+        return (klass == Integer.class  ||
+                klass == Double.class   ||
+                klass == Long.class     ||
+                klass == Float.class    ||
+                klass == String.class   ||
+                klass.isPrimitive());
     }
 }

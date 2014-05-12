@@ -38,31 +38,11 @@ public class SetterInjector implements InjectionMethod {
             logger.debug(String.format("Injecting %s into %s via method %s", field.getType().getName(), klass.getName(), methodName));
             Method setterMethod = targetObject.getClass().getDeclaredMethod(methodName, field.getType());
 
-            if (isFieldPrimitive(field)) {
-                //Just inject the primitive object as is
-                setterMethod.invoke(targetObject, value);
-            } else {
-                //We have a complex object here.
-                if (! (value instanceof String)) {
-                    //At this point we have an already instantiated object.
-                    //Just inject it.
-                    logger.info("Object to inject is already instantiated. Wizard will just inject it.");
-                    setterMethod.invoke(targetObject, value);
-                } else {
-                    // The config contains just the qualified name of the object.
-                    // Wizard has to get it´s class and instantiate it.
-                    String qualifiedName = (String)value;
-                    logger.debug(String.format("Instantiatin class to inject: %s", qualifiedName));
-                    Object injectionValue = Class.forName(qualifiedName).newInstance();
-                    setterMethod.invoke(targetObject, injectionValue);
-                }
-            }
+            setterMethod.invoke(targetObject, value);
         } catch (IllegalAccessException e) {
             logger.error(String.format("Error invoking the method %s on class %s", methodName, targetObject.getClass().getName()), e);
         } catch (InvocationTargetException e) {
             logger.error(String.format("Error invoking the method %s on class %s", methodName, targetObject.getClass().getName()), e);
-        } catch (ClassNotFoundException e) {
-            logger.error(String.format("Could not create value to inject %s", (String)value), e);
         } catch (InstantiationException e) {
             logger.error(String.format("Could not create value to inject %s", (String)value), e);
         } catch (NoSuchMethodException e) {
