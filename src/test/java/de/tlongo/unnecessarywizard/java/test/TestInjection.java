@@ -3,10 +3,8 @@ package de.tlongo.unnecessarywizard.java.test;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 
-import de.tlongo.unneccesarywizard.java.core.Configuration;
-import de.tlongo.unneccesarywizard.java.core.FieldInjector;
-import de.tlongo.unneccesarywizard.java.core.SetterInjector;
-import de.tlongo.unneccesarywizard.java.core.Wizard;
+import de.tlongo.unneccesarywizard.java.core.*;
+import de.tlongo.unneccesarywizard.java.core.InstantiationException;
 import de.tlongo.unnecessarywizard.java.test.objects.ComplexObject;
 import de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection;
 import de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection;
@@ -34,6 +32,7 @@ public class TestInjection {
     private Wizard createWizard(String scriptName) {
         Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);;
         wizard.setInjectionMethod(new SetterInjector());
+        wizard.setInstantiator(new DefaultInstantiator(wizard.getInjectionConfig().getPackagesToScan()));
         return wizard;
     }
 
@@ -60,6 +59,11 @@ public class TestInjection {
         Map<String, Object> injectableFields = target.getFields();
         assertThat(injectableFields.size(), equalTo(1));
         assertThat(injectableFields.get("fieldNameOne"), equalTo("classToInject"));
+
+        List<String> packagesToScan = injectionConfig.getPackagesToScan();
+        assertThat(packagesToScan, notNullValue());
+        assertThat(packagesToScan, hasSize(2));
+        assertThat(packagesToScan, allOf(hasItem("package.A"), hasItem("package.B")));
     }
 
     @Test
@@ -100,5 +104,8 @@ public class TestInjection {
         assertThat(object.getDecimalValue(), equalTo(new BigDecimal("22.3")));
 
         assertThat(object.getList(), notNullValue());
+
+        assertThat(object.getSampleClass(), notNullValue());
+        assertThat(object.getSampleClass().getField(), equalTo(23));
     }
 }

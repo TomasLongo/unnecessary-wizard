@@ -9,6 +9,7 @@ import java.util.List;
 public class ComplexObject {
     BigDecimal decimalValue;
     List list;
+    SampleClassToInject sampleClass;
 
     public BigDecimal getDecimalValue() {
         return decimalValue;
@@ -24,5 +25,13 @@ public class ComplexObject {
 
     public void setList(List list) {
         this.list = list;
+    }
+
+    public SampleClassToInject getSampleClass() {
+        return sampleClass;
+    }
+
+    public void setSampleClass(SampleClassToInject sampleClass) {
+        this.sampleClass = sampleClass;
     }
 }

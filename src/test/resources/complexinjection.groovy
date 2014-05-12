@@ -10,12 +10,13 @@ injector {
     type "Debug"
 
     // The packages in which the classes are meant to be found
-    packagesToScan << "package.A" << "package.B"
+    packagesToScan << "de.tlongo.unnecessarywizard.java.test.objects"
 
     // Here comes a list of injection targets
     // A injectionTarget is a class, which expects its dependencies to be injected
 
     injectionTarget("de.tlongo.unnecessarywizard.java.test.objects.ComplexObject",
                     [decimalValue:new BigDecimal('22.3'),
-                     list:"java.util.ArrayList"])
+                     list:"java.util.ArrayList",
+                     sampleClass:"SampleClassToInject"])
 }
