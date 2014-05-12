@@ -14,7 +14,7 @@ public class InjectionConfig implements Configuration {
     String name
     String type
     def injectionTargetList = [:]
-    def packagesToScan = []
+    def packages = []
 
     Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
 
@@ -88,6 +88,11 @@ public class InjectionConfig implements Configuration {
     @Override
     Configuration.InjectionTarget getInjectionTarget(String name) {
         return injectionTargetList[name];
+    }
+
+    @Override
+    List<String> getPackagesToScan() {
+        return packages;
     }
 }
 

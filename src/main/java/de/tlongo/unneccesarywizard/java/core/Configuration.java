@@ -53,4 +53,6 @@ public interface Configuration {
      *         Null otherwise.
      */
     InjectionTarget getInjectionTarget(String name);
+
+    List<String> getPackagesToScan();
 }
