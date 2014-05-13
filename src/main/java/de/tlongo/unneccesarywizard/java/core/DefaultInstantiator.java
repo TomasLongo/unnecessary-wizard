@@ -26,6 +26,10 @@ public class DefaultInstantiator extends ClassInstantiator {
                 classToInstantiate = scanPackagesForClass(name);
             }
 
+            if (classToInstantiate == null) {
+                throw new InstantiationException(String.format("Could not create object with name %s", name));
+            }
+
             return classToInstantiate.newInstance();
         } catch (ClassNotFoundException e) {
             throw new InstantiationException(String.format("Could not create object with name %s", name), e);
@@ -40,8 +44,15 @@ public class DefaultInstantiator extends ClassInstantiator {
         for (String p : packagesToScan) {
             StringBuilder builder = new StringBuilder(p);
             builder.append(".").append(className);
-            return  Class.forName(builder.toString());
+
+            try {
+                return  Class.forName(builder.toString());
+            } catch (ClassNotFoundException e) {
+                logger.info(String.format("%s could not be found", builder.toString()));
+            }
         }
+
+        logger.error(String.format("%s could not be found in any package", className));
 
         return null;
     }
