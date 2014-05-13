@@ -58,13 +58,7 @@ public class Wizard {
             DSLProcessor dsl = (DSLProcessor)groovyDslClass.newInstance();
 
             return dsl.createConfig(script);
-        } catch (IOException e) {
-            logger.error("An error occured evaluating the config script", e);
-        } catch (InstantiationException e) {
-            logger.error("An error occured evaluating the config script", e);
-        } catch (IllegalAccessException e) {
-            logger.error("An error occured evaluating the config script", e);
-        } catch (java.lang.InstantiationException e) {
+        } catch (IOException | IllegalAccessException | java.lang.InstantiationException | InstantiationException e) {
             logger.error("An error occured evaluating the config script", e);
         }
 
@@ -88,6 +82,7 @@ public class Wizard {
         String targetName = clazz.getName();
         logger.debug("creating object graph for target: " + targetName);
 
+        // TODO Find target by simple name or qualified name
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(targetName);
         if (target == null) {
             throw new IllegalArgumentException("Could not find InjectionTarget for class " + targetName);
@@ -99,6 +94,8 @@ public class Wizard {
         target.getFields().forEach((fieldName, value) -> {
             //TODO What is the type of 'value' here?
             Field field = getFieldFromClass(clazz, fieldName);
+
+            // TODO This is bullshit!! If the field is primitive or NOT a string!?!?
             if (isFieldPrimitive(field) || !(value instanceof String)) {
                 // Just inject the value as is if the field is primitive
                 injectionMethod.inject(targetObject, value, fieldName);
