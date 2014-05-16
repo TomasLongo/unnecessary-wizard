@@ -18,24 +18,24 @@ public class InjectionConfig implements Configuration {
 
     Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
 
-    def injectionTarget(targetName, fields) {
-        logger.debug("Creating injection target ${targetName}")
+    def name(String name) {
+        logger.debug("setting name for config to $name")
+        this.name = name
+    }
+
+    def injectionTarget(closure) {
 
         InjectionTarget target = new InjectionTarget()
+        closure.delegate = target;
+        closure()
 
-        target.targetName = targetName
-        fields.entrySet().each {
-            logger.debug("adding '${it.key}:${it.value}' to '${targetName}'")
-            target.fields[it.key] = it.value
-        }
+        logger.debug("Creating injection target ${target.name}")
 
-        injectionTargetList[targetName] = target
+        injectionTargetList[target.name] = target
     }
 
     def invokeMethod(String methodName, args) {
-        if (methodName == "name") {
-            name = args[0]
-        } else if (methodName == "packagesToScan") {
+        if (methodName == "packagesToScan") {
             logger.debug('processing packages...')
             println args[0]
             def packagesList = args[0]

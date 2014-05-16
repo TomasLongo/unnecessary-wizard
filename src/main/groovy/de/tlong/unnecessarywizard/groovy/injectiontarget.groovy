@@ -12,7 +12,26 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
     //The targetName of the fields, which should be injected
     def fields = [:]
 
+    void targetName(name) {
+        targetName = name
+    }
 
+    /**
+     * Used to add fields and their injection values to the target
+     *
+     * @param fieldName
+     * @param args
+     * 
+     * @return
+     */
+    def invokeMethod(String fieldName, args) {
+        fields[fieldName] = args[0]
+    }
+
+    void fields(closure) {
+        closure.delegate = this
+        closure()
+    }
 
     boolean equals(o) {
         if (this.is(o)) return true
