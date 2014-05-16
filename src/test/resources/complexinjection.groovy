@@ -15,8 +15,10 @@ injector {
     // Here comes a list of injection targets
     // A injectionTarget is a class, which expects its dependencies to be injected
 
-    injectionTarget("de.tlongo.unnecessarywizard.java.test.objects.ComplexObject",
-                    [decimalValue:new BigDecimal('22.3'),
-                     list:"java.util.ArrayList",
-                     sampleClass:"SampleClassToInject"])
+    injectionTarget {
+        targetName "de.tlongo.unnecessarywizard.java.test.objects.ComplexObject"
+        decimalValue new BigDecimal('22.3')
+        list "java.util.ArrayList"
+        sampleClass "SampleClassToInject"
+    }
 }

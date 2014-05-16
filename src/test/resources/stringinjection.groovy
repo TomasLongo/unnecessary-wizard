@@ -14,8 +14,11 @@ injector {
 
     // Here comes a list of injection targets
     // A injectionTarget is a class, which expects its dependencies to be injected
+    injectionTarget {
+        targetName "de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection"
+        fieldToInject "This string was injected"
+        secondField "If this works..."
+        thirdField "I go nuts"
+    }
 
-    injectionTarget("de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection", [fieldToInject:"This string was injected",
-                                                                                            secondField:"If this works...",
-                                                                                            thirdField:"I go nuts"])
 }
