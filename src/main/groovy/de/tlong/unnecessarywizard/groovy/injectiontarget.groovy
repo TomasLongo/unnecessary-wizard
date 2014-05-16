@@ -21,7 +21,7 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
      *
      * @param fieldName
      * @param args
-     * 
+     *
      * @return
      */
     def invokeMethod(String fieldName, args) {

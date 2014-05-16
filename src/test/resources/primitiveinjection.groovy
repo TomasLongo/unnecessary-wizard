@@ -15,9 +15,13 @@ injector {
     // Here comes a list of injection targets
     // A injectionTarget is a class, which expects its dependencies to be injected
 
-    injectionTarget("de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection",
-            [intField:123,
-             longField:456L,
-             floatField:23.44f,
-             doubleField:0.456789D])
+    injectionTarget{
+        targetName "de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection"
+        fields {
+            intField 123
+            longField 456L
+            floatField 23.44f
+            doubleField 0.456789D
+        }
+    }
 }
