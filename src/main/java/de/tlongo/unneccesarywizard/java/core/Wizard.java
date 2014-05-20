@@ -2,6 +2,7 @@ package de.tlongo.unneccesarywizard.java.core;
 
 import groovy.lang.GroovyClassLoader;
 import org.apache.commons.lang3.StringUtils;
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
  * Created by tolo on 16.04.2014.
@@ -28,6 +30,8 @@ public class Wizard {
 
     InjectionMethod injectionMethod;
     ClassInstantiator instantiator;
+
+    Reflections reflections = new Reflections("de.tlongo.unnecessarywizard");
 
     public Wizard(String configFile) {
         logger.info("Initializing the wizard with config file: " + configFile);
@@ -95,15 +99,54 @@ public class Wizard {
             //TODO What is the type of 'value' here?
             Field field = getFieldFromClass(clazz, fieldName);
 
-            // TODO This is bullshit!! If the field is primitive or NOT a string!?!?
-            if (isFieldPrimitive(field) || !(value instanceof String)) {
+            if (isFieldPrimitive(field) || isFieldString(field)) {
                 // Just inject the value as is if the field is primitive
                 injectionMethod.inject(targetObject, value, fieldName);
             } else {
                 // We have a complex object here.
                 // Grab an instance and inject it.
-                Object objectToInject = instantiator.instantiate((String)value);
-                injectionMethod.inject(targetObject, objectToInject, fieldName);
+                if (value instanceof String) {
+                    // The field is a complex type and the value is a string telling us what to inject
+                    Object objectToInject = null;
+
+
+                    if (!field.getType().isInterface()) {
+                        logger.debug(String.format("Field %s of type %s is not an interface.", field.getName(), field.getType().getName()));
+                        objectToInject = instantiator.instantiate((String)value);
+                    } else {
+                        logger.debug(String.format("Field %s of type %s is an interface.", field.getName(), field.getType().getName()));
+                        // We field we are injecting into is an interface
+                        if (StringUtils.isEmpty((String)value)) {
+                            // The config says that only one implementation of the interface exists.
+                            // Check it
+                            Set<Class<?>> implementations = reflections.getSubTypesOf((Class)field.getType());
+                            if (implementations.size() > 1) {
+                                throw new RuntimeException(String.format("Can not inject into field %s of target %s. Found more than one implementation for type %s", fieldName, targetName, field.getType().getName()));
+                            }
+
+                            if (implementations.size() == 0) {
+                                throw new RuntimeException(String.format("Can not inject into field %s of target %s. Could not find implementation for type %s", fieldName, targetName, field.getType().getName()));
+                            }
+
+                            try {
+                                for (Class klass : implementations) {
+                                    logger.debug(String.format("Injecting simple implementation (%s) of interface %s", klass.getName(), field.getType().getName()));
+                                    objectToInject = klass.newInstance();
+                                }
+                            } catch (java.lang.InstantiationException e) {
+                                throw new RuntimeException(e);
+                            } catch (IllegalAccessException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else {
+                            objectToInject = instantiator.instantiate((String)value);
+                        }
+                    }
+                    injectionMethod.inject(targetObject, objectToInject, fieldName);
+                } else {
+                    // The value is an already instantiated type -> inject it directly
+                    injectionMethod.inject(targetObject, value, fieldName);
+                }
             }
         });
 
@@ -125,6 +168,10 @@ public class Wizard {
         }
     }
 
+    private boolean isFieldString(Field field) {
+        return field.getType() == String.class;
+    }
+
     /**
      * Checks if a field´s type is primitve.
      *
@@ -142,7 +189,6 @@ public class Wizard {
                 klass == Double.class   ||
                 klass == Long.class     ||
                 klass == Float.class    ||
-                klass == String.class   ||
                 klass.isPrimitive());
     }
 }

@@ -4,7 +4,7 @@
 
 injector {
     // The name of this injector
-    name "SimplePrimitiveInjection"
+    name "ComplexInjection"
 
     // The type of this injector
     type "Debug"
@@ -20,5 +20,6 @@ injector {
         decimalValue new BigDecimal('22.3')
         list "java.util.ArrayList"
         sampleClass "SampleClassToInject"
+        singleInterface ""
     }
 }

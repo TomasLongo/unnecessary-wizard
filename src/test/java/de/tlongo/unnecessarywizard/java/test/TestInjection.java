@@ -107,5 +107,8 @@ public class TestInjection {
 
         assertThat(object.getSampleClass(), notNullValue());
         assertThat(object.getSampleClass().getField(), equalTo(23));
+
+        assertThat(object.getSingleInterface(), notNullValue());
+        assertThat(object.getSingleInterface().singleMethod(), equalTo("This is the impl of the single interface"));
     }
 }
