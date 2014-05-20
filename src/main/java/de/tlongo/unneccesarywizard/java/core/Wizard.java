@@ -119,20 +119,8 @@ public class Wizard {
                         if (StringUtils.isEmpty((String)value)) {
                             // The config says that only one implementation of the interface exists.
                             // Check it...
-                            Set<Class<?>> implementations = reflections.getSubTypesOf((Class)field.getType());
-                            if (implementations.size() > 1) {
-                                throw new RuntimeException(String.format("Can not inject into field %s of target %s. Found more than one implementation for type %s", fieldName, targetName, field.getType().getName()));
-                            }
-                            if (implementations.size() == 0) {
-                                throw new RuntimeException(String.format("Can not inject into field %s of target %s. Could not find implementation for type %s", fieldName, targetName, field.getType().getName()));
-                            }
-                            // Instantiate the found impl
-                            // TODO Do we have to construct a loop here just to get the single value out of the set.
-                            for (Class klass : implementations) {
-                                logger.debug(String.format("Injecting simple implementation (%s) of interface %s", klass.getName(), field.getType().getName()));
-
-                                objectToInject = instantiator.instantiate(klass);
-                            }
+                            Class klass = findSingleImplementationOfInterface(field);
+                            objectToInject = instantiator.instantiate(klass);
                         } else {
                             // The impl was provided in the config. Just instantiate it.
                             objectToInject = instantiator.instantiate((String)value);
@@ -148,6 +136,29 @@ public class Wizard {
         });
 
         return targetObject;
+    }
+
+    private Class findSingleImplementationOfInterface(Field field) {
+        // The config says that only one implementation of the interface exists.
+        // Check it...
+        Set<Class<?>> implementations = reflections.getSubTypesOf((Class)field.getType());
+        if (implementations.size() > 1) {
+            throw new RuntimeException(String.format("Can not inject into field %s. Found more than one implementation for type %s", field.getName(), field.getType().getName()));
+        }
+        if (implementations.size() == 0) {
+            throw new RuntimeException(String.format("Can not inject into field %s. Could not find implementation for type %s", field.getName(), field.getType().getName()));
+        }
+
+        // Instantiate the found impl
+        // TODO Do we have to construct a loop here just to get the single value out of the set.
+        for (Class klass : implementations) {
+            logger.debug(String.format("Injecting simple implementation (%s) of interface %s", klass.getName(), field.getType().getName()));
+
+            return klass;
+        }
+
+        // Will never be reached...
+        return null;
     }
 
     /**
