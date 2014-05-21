@@ -111,4 +111,10 @@ public class TestInjection {
         assertThat(object.getSingleInterface(), notNullValue());
         assertThat(object.getSingleInterface().singleMethod(), equalTo("This is the impl of the single interface"));
     }
+
+    @Test(expected = RuntimeException.class)
+    public void testInterfaceInjectionError() throws Exception {
+        Wizard wizard = createWizard("complexinjectionerror.groovy");
+        ComplexObject co = wizard.createObjectGraph(ComplexObject.class);
+    }
 }

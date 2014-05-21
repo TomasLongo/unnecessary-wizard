@@ -166,8 +166,6 @@ public class Wizard {
             throw new RuntimeException(String.format("Can not inject into field %s. Could not find implementation for type %s", field.getName(), field.getType().getName()));
         }
 
-        // Instantiate the found impl
-        // TODO Do we have to construct a loop here just to get the single value out of the set.
         return (Class)(implementations.get(0));
     }
 

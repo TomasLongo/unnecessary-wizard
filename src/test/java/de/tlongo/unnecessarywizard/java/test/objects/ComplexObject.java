@@ -11,6 +11,7 @@ public class ComplexObject {
     List list;
     SampleClassToInject sampleClass;
     SingleInterface singleInterface;
+    TestInterface testInterface;
 
     public BigDecimal getDecimalValue() {
         return decimalValue;
@@ -42,5 +43,13 @@ public class ComplexObject {
 
     public void setSingleInterface(SingleInterface singleInterface) {
         this.singleInterface = singleInterface;
+    }
+
+    public TestInterface getTestInterface() {
+        return testInterface;
+    }
+
+    public void setTestInterface(TestInterface testInterface) {
+        this.testInterface = testInterface;
     }
 }
