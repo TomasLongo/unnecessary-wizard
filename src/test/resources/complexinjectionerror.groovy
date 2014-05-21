@@ -17,9 +17,10 @@ injector {
 
     injectionTarget {
         targetName "de.tlongo.unnecessarywizard.java.test.objects.ComplexObject"
-        decimalValue new BigDecimal('22.3')
-        list "java.util.ArrayList"
-        sampleClass "SampleClassToInject"
-        singleInterface ""
+
+        // This injection must throw an Exception since there is more than one
+        // implementatin for this interface and the wizard can not tell which
+        // one to use
+        testInterface ""
     }
 }

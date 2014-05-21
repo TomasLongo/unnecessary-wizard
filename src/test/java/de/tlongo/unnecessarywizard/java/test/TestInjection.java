@@ -107,5 +107,18 @@ public class TestInjection {
 
         assertThat(object.getSampleClass(), notNullValue());
         assertThat(object.getSampleClass().getField(), equalTo(23));
+
+        assertThat(object.getSingleInterface(), notNullValue());
+        assertThat(object.getSingleInterface().singleMethod(), equalTo("This is the impl of the single interface"));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testInterfaceInjectionError() throws Exception {
+        // Test if wizard detects that there is more than one implementation
+        // of an interface while the config doesnt specify which implementation
+        // to choose.
+        
+        Wizard wizard = createWizard("complexinjectionerror.groovy");
+        ComplexObject co = wizard.createObjectGraph(ComplexObject.class);
     }
 }
