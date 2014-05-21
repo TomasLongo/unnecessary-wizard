@@ -1,6 +1,8 @@
 package de.tlong.unnecessarywizard.groovy
 
 import de.tlongo.unneccesarywizard.java.core.Configuration
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Created by tolo on 15.04.2014.
@@ -11,27 +13,30 @@ import de.tlongo.unneccesarywizard.java.core.Configuration
 public class InjectionConfig implements Configuration {
     String name
     String type
-    def injectionTargets = []
-    def packagesToScan = []
+    def injectionTargetList = [:]
+    def packages = []
 
-    def injectionTarget(targetName, fields) {
-        println 'processing target'
+    Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
+
+    def name(String name) {
+        logger.debug("setting name for config to $name")
+        this.name = name
+    }
+
+    def injectionTarget(closure) {
+
         InjectionTarget target = new InjectionTarget()
+        closure.delegate = target;
+        closure()
 
-        target.name = targetName
-        fields.entrySet().each {
-            println "adding '${it.key}:${it.value} to '${targetName}"
-            target.fields[it.key] = it.value
-        }
+        logger.debug("Creating injection target ${target.name}")
 
-        injectionTargets << target
+        injectionTargetList[target.name] = target
     }
 
     def invokeMethod(String methodName, args) {
-        if (methodName == "name") {
-            name = args[0]
-        } else if (methodName == "packagesToScan") {
-            println 'processing packages...'
+        if (methodName == "packagesToScan") {
+            logger.debug('processing packages...')
             println args[0]
             def packagesList = args[0]
             packagesList.each { item ->
@@ -40,20 +45,20 @@ public class InjectionConfig implements Configuration {
         } else if (methodName == "type") {
             type = args[0]
         } else {
-            println "Not defined method '${methodName}'i was called"
+            logger.warning("Unknown property found: ${methodName}")
         }
     }
 
     def String toString() {
         def dump = new StringBuffer()
         dump << "Dumping InjectionConfig\n"
-        dump << "name:${name}\n"
+        dump << "targetName:${name}\n"
         dump << "type:${type}\n"
         dump << "packages to scan\n"
         packagesToScan.each {item ->
             dump << item + "\n"
         }
-        injectionTargets.each {
+        injectionTargetList.each {
             dump << it.toString() + "\n"
         }
 
@@ -68,6 +73,26 @@ public class InjectionConfig implements Configuration {
     @Override
     String getConfigType() {
         return type
+    }
+
+    @Override
+    int getInjectionTargetCount() {
+        return injectionTargetList.size()
+    }
+
+    @Override
+    List<Configuration.InjectionTarget> getInjectionTargets() {
+        return injectionTargetList.values().toList();
+    }
+
+    @Override
+    Configuration.InjectionTarget getInjectionTarget(String name) {
+        return injectionTargetList[name];
+    }
+
+    @Override
+    List<String> getPackagesToScan() {
+        return packages;
     }
 }
 

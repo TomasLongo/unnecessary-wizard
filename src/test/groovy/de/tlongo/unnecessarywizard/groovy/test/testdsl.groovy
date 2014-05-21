@@ -25,6 +25,6 @@ public class TestDsl {
         assertThat(config.packagesToScan, hasSize(greaterThan(0)))
         assertThat(config.packagesToScan, hasItems(equalTo("package.A"), equalTo("package.B")))
 
-        assertThat(config.injectionTargets, hasSize(3))
+        assertThat(config.injectionTargetList, hasSize(3))
     }
 }

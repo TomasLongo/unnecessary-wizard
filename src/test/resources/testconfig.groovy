@@ -14,11 +14,25 @@ injector {
 
     // Here comes a list of injection targets
     // A injectionTarget is a class, which expects its dependencies to be injected
-//    injectionTarget([name:"ClassA", fields:[fieldNameOne:"classToInject"]])
-//    injectionTarget([name:"ClassB", fields:[fieldNameTwo:"classToInject"]])
-//    injectionTarget([name:"ClassC", fields:[fieldNameThree:"classToInject"]])
 
-    injectionTarget("ClassA", [fieldNameOne:"classToInject"])
-    injectionTarget("ClassB", [fieldNameOne:"classToInject"])
-    injectionTarget("ClassC", [fieldNameOne:"classToInject"])
+    injectionTarget {
+        targetName "ClassA"
+        fields {
+            fieldNameOne "classToInject"
+        }
+    }
+
+    injectionTarget {
+        targetName "ClassB"
+        fields {
+            fieldNameOne "classToInject"
+        }
+    }
+
+    injectionTarget {
+        targetName "ClassC"
+        fields {
+            fieldNameOne "classToInject"
+        }
+    }
 }
