@@ -114,6 +114,10 @@ public class TestInjection {
 
     @Test(expected = RuntimeException.class)
     public void testInterfaceInjectionError() throws Exception {
+        // Test if wizard detects that there is more than one implementation
+        // of an interface while the config doesnt specify which implementation
+        // to choose.
+        
         Wizard wizard = createWizard("complexinjectionerror.groovy");
         ComplexObject co = wizard.createObjectGraph(ComplexObject.class);
     }
