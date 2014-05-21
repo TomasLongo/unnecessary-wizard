@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -138,10 +140,25 @@ public class Wizard {
         return targetObject;
     }
 
+    /**
+     * Looks for an implementation of an interface for the passed field.
+     *
+     * This method is intended to be used when the value for an interface is
+     * omited in the configuration. In that case, the wizard checks if there
+     * exists an implementation for that interface. In case it finds more than
+     * one implementation, the wizard throws an Exception since it is unable to
+     * decide which one to choose. The user has to specify it then.
+     *
+     * @param field The field, into which the implementation should be injected.
+     *              The underlying type must be an interface.
+     *
+     * @return      The class object of the found implementation.
+     */
     private Class findSingleImplementationOfInterface(Field field) {
         // The config says that only one implementation of the interface exists.
         // Check it...
-        Set<Class<?>> implementations = reflections.getSubTypesOf((Class)field.getType());
+        List<Class> implementations = new ArrayList<>();
+        implementations.addAll(reflections.getSubTypesOf((Class)field.getType()));
         if (implementations.size() > 1) {
             throw new RuntimeException(String.format("Can not inject into field %s. Found more than one implementation for type %s", field.getName(), field.getType().getName()));
         }
@@ -151,14 +168,7 @@ public class Wizard {
 
         // Instantiate the found impl
         // TODO Do we have to construct a loop here just to get the single value out of the set.
-        for (Class klass : implementations) {
-            logger.debug(String.format("Injecting simple implementation (%s) of interface %s", klass.getName(), field.getType().getName()));
-
-            return klass;
-        }
-
-        // Will never be reached...
-        return null;
+        return (Class)(implementations.get(0));
     }
 
     /**
@@ -182,9 +192,6 @@ public class Wizard {
 
     /**
      * Checks if a field´s type is primitve.
-     *
-     * NOTE: Strings are treated as primitve as well.
-     * TODO Is the above mechanic good????
      *
      * @param field The field, which´s type should be checked.
      *
