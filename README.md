@@ -34,6 +34,7 @@ Want to taste it?
     }
 
 Take a closer look at this statement:
-    decimalValue new BigDecimal('23.3')
 
+    decimalValue new BigDecimal('23.3')
+    
 The Wizard has just been born. The best is yet come!!!
