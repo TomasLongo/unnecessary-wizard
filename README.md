@@ -11,7 +11,7 @@ a For-Loop to sum up a list of integers.
 
 Want to taste it?
 
-injector {
+  injector {
     // The name of this injection configuration
     name "Injection"
 
@@ -31,7 +31,7 @@ injector {
         sampleClass "SampleClassToInject"
         singleInterface ""
     }
-}
+  }
 
 Take a closer look at line 29!!
 
