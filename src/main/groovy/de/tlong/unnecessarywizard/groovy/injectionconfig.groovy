@@ -14,7 +14,6 @@ public class InjectionConfig implements Configuration {
     String name
     String type
     def injectionTargetList = [:]
-    def packages = []
 
     Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
 
@@ -35,14 +34,7 @@ public class InjectionConfig implements Configuration {
     }
 
     def invokeMethod(String methodName, args) {
-        if (methodName == "packagesToScan") {
-            logger.debug('processing packages...')
-            println args[0]
-            def packagesList = args[0]
-            packagesList.each { item ->
-                packagesToScan << item
-            }
-        } else if (methodName == "type") {
+        if (methodName == "type") {
             type = args[0]
         } else {
             logger.warning("Unknown property found: ${methodName}")
@@ -54,10 +46,6 @@ public class InjectionConfig implements Configuration {
         dump << "Dumping InjectionConfig\n"
         dump << "targetName:${name}\n"
         dump << "type:${type}\n"
-        dump << "packages to scan\n"
-        packagesToScan.each {item ->
-            dump << item + "\n"
-        }
         injectionTargetList.each {
             dump << it.toString() + "\n"
         }
@@ -88,11 +76,6 @@ public class InjectionConfig implements Configuration {
     @Override
     Configuration.InjectionTarget getInjectionTarget(String name) {
         return injectionTargetList[name];
-    }
-
-    @Override
-    List<String> getPackagesToScan() {
-        return packages;
     }
 }
 

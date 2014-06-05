@@ -32,7 +32,7 @@ public class TestInjection {
     private Wizard createWizard(String scriptName) {
         Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);;
         wizard.setInjectionMethod(new SetterInjector());
-        wizard.setInstantiator(new DefaultInstantiator(wizard.getInjectionConfig().getPackagesToScan()));
+        wizard.setInstantiator(new DefaultInstantiator());
         return wizard;
     }
 
@@ -59,11 +59,6 @@ public class TestInjection {
         Map<String, Object> injectableFields = target.getFields();
         assertThat(injectableFields.size(), equalTo(1));
         assertThat(injectableFields.get("fieldNameOne"), equalTo("classToInject"));
-
-        List<String> packagesToScan = injectionConfig.getPackagesToScan();
-        assertThat(packagesToScan, notNullValue());
-        assertThat(packagesToScan, hasSize(2));
-        assertThat(packagesToScan, allOf(hasItem("package.A"), hasItem("package.B")));
     }
 
     @Test
