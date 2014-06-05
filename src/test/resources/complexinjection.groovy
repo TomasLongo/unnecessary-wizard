@@ -8,7 +8,7 @@ injector {
     // The name of this injector
     name "ComplexInjection"
 
-    // The type of this injector
+    // The type of this injector is a jerk
     type "Debug"
 
     // Here comes a list of injection targets
@@ -16,9 +16,12 @@ injector {
 
     injectionTarget {
         targetName basePackage+"ComplexObject"
-        decimalValue new BigDecimal('22.3')
-        list "java.util.ArrayList"
-        sampleClass basePackage+"SampleClassToInject"
-        singleInterface ""
+
+        fields {
+            decimalValue new BigDecimal('22.3')
+            list "java.util.ArrayList"
+            sampleClass basePackage + "SampleClassToInject"
+            singleInterface ""
+        }
     }
 }
