@@ -12,6 +12,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,6 +23,8 @@ import java.util.Map;
  * Created by tolo on 15.04.2014.
  */
 public class TestInjection {
+    Logger logger = LoggerFactory.getLogger(TestInjection.class);
+
     private static org.apache.commons.configuration.Configuration config;
     private final String TESTSCRIPT = "testconfig.groovy";
 
@@ -30,10 +34,30 @@ public class TestInjection {
     }
 
     private Wizard createWizard(String scriptName) {
-        Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);;
+        Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);
         wizard.setInjectionMethod(new SetterInjector());
         wizard.setInstantiator(new DefaultInstantiator());
         return wizard;
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testConfigErrorInConfigSection() throws Exception {
+        try {
+            Wizard wizard = createWizard("testconfigerror.groovy");
+        } catch (RuntimeException e) {
+            logger.error("An error occured while parsing the config file", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testConfigErrorInTargetSection() throws Exception {
+        try {
+            Wizard wizard = createWizard("testconfigerrortargetsection.groovy");
+        } catch (RuntimeException e) {
+            logger.error("An error occured while parsing the config file", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

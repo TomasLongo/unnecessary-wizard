@@ -29,7 +29,9 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
      * @return
      */
     def invokeMethod(String methodName, args) {
-        logger.error("'$methodName' is not allowed in the injection target section")
+        def errorMSg = "'$methodName' is not allowed in the injection target section"
+        logger.error(errorMSg)
+        throw new RuntimeException(errorMSg)
     }
 
     void fields(Closure closure) {
