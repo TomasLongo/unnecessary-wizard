@@ -10,14 +10,20 @@ import org.slf4j.LoggerFactory
 public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Configuration.InjectionTarget {
     def logger = LoggerFactory.getLogger(InjectionTarget.class)
 
-    //fully qualified targetName ot the class which expects injections
-    def targetName;
+    def id;
+
+    //fully qualified name of the underlying class
+    def className
 
     //The targetName of the fields, which should be injected
     def fieldList = new FieldList()
 
-    void targetName(name) {
-        targetName = name
+    void id(id) {
+        this.id = id
+    }
+
+    def className(className) {
+        this.className = className
     }
 
     /**
@@ -49,7 +55,7 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
 
         if (fieldList != that.fieldList) return false
         if (logger != that.logger) return false
-        if (targetName != that.targetName) return false
+        if (id != that.id) return false
 
         return true
     }
@@ -57,14 +63,19 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
     int hashCode() {
         int result
         result = (logger != null ? logger.hashCode() : 0)
-        result = 31 * result + (targetName != null ? targetName.hashCode() : 0)
+        result = 31 * result + (id != null ? id.hashCode() : 0)
         result = 31 * result + (fieldList != null ? fieldList.hashCode() : 0)
         return result
     }
 
     @Override
-    String getName() {
-        return targetName
+    String getId() {
+        return id
+    }
+
+    @Override
+    String getClassName() {
+        return className
     }
 
     Map<String, Object> getFields() {

@@ -13,21 +13,24 @@ injector {
     // A injectionTarget is a class, which expects its dependencies to be injected
 
     injectionTarget {
-        targetName "ClassA"
+        id "MyClassA"
+        className "my.package.ClassA"
         fields {
             fieldNameOne "classToInject"
         }
     }
 
     injectionTarget {
-        targetName "ClassB"
+        id "MyClassB"
+        className "my.package.ClassC"
         fields {
             fieldNameOne "classToInject"
         }
     }
 
     injectionTarget {
-        targetName "ClassC"
+        id "MyClassC"
+        className "my.package.ClassC"
         fields {
             fieldNameOne "classToInject"
         }

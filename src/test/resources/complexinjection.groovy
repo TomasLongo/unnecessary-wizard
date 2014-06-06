@@ -15,7 +15,8 @@ injector {
     // A injectionTarget is a class, which expects its dependencies to be injected
 
     injectionTarget {
-        targetName basePackage+"ComplexObject"
+        id "ComplexObject"
+        className basePackage+"ComplexObject"
 
         fields {
             decimalValue new BigDecimal('22.3')

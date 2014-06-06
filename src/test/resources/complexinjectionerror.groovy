@@ -16,7 +16,8 @@ injector {
     // A injectionTarget is a class, which expects its dependencies to be injected
 
     injectionTarget {
-        targetName "de.tlongo.unnecessarywizard.java.test.objects.ComplexObject"
+        id "Failed"
+        className "de.tlongo.unnecessarywizard.java.test.objects.ComplexObject"
 
         // This injection must throw an Exception since there is more than one
         // implementatin for this interface and the wizard can not tell which

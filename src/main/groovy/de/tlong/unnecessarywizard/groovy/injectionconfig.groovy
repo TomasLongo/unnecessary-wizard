@@ -24,9 +24,9 @@ public class InjectionConfig implements Configuration {
         closure.delegate = target;
         closure()
 
-        logger.debug("Created injection target ${target.name}")
+        logger.debug("Created injection target ${target.id}")
 
-        injectionTargetList[target.name] = target
+        injectionTargetList[target.id] = target
     }
 
     def type(type) {
@@ -70,7 +70,7 @@ public class InjectionConfig implements Configuration {
     }
 
     @Override
-    Configuration.InjectionTarget getInjectionTarget(String name) {
-        return injectionTargetList[name];
+    Configuration.InjectionTarget getInjectionTarget(String id) {
+        return injectionTargetList[id];
     }
 }

@@ -75,26 +75,16 @@ public class Wizard {
         return injectionConfig;
     }
 
-    /**
-     * Creates an instance of a class with all its dependencies.
-     *
-     * @param clazz The class of the object that should be created.
-     * @param <T>   The type of the Object that should be created.
-     *
-     * @throws IllegalAccessException If a field of the class is not accessible
-     * @throws InstantiationException If it was not possible to create an instance of T.
-     */
-    public <T> T createObjectGraph(Class<T> clazz) throws IllegalAccessException, InstantiationException {
-        String targetName = clazz.getName();
-        logger.debug("creating object graph for target: " + targetName);
+    public Object createObjectGraph(String id) throws IllegalAccessException, InstantiationException {
+        logger.debug(String.format("creating object graph for target: ", id));
 
-        // TODO Find target by simple name or qualified name
-        Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(targetName);
+        Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(id);
         if (target == null) {
-            throw new IllegalArgumentException("Could not find InjectionTarget for class " + targetName);
+            throw new IllegalArgumentException(String.format("Could not find InjectionTarget for class ", id));
         }
 
-        final T targetObject = (T)instantiator.instantiate(clazz);
+        final Object targetObject = instantiator.instantiate(target.getClassName());
+        Class clazz = targetObject.getClass();
 
         // Inject values into fields of target
         target.getFields().forEach((fieldName, value) -> {

@@ -13,11 +13,14 @@ import java.util.Map;
 public interface Configuration {
     public static interface InjectionTarget {
         /**
-         * Return the name of this target
-         *
-         * @return
+         * Returns the name of this target
          */
-        String getName();
+        String getId();
+
+        /**
+         * Returns the fully qualified class of this injection target
+         */
+        String getClassName();
 
         /**
          * Return the fields of this target, that should be
