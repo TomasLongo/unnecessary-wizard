@@ -5,48 +5,36 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
- * Created by tolo on 15.04.2014.
+ * Created by Tomas Longo on 15.04.2014.
  */
-
-//Script script = new GroovyShell().parse(new File("testscript.groovy"))
 
 public class InjectionConfig implements Configuration {
     String name
     String type
     def injectionTargetList = [:]
-    def packages = []
 
     Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
 
     def name(String name) {
-        logger.debug("setting name for config to $name")
         this.name = name
     }
 
     def injectionTarget(closure) {
-
         InjectionTarget target = new InjectionTarget()
         closure.delegate = target;
         closure()
 
-        logger.debug("Creating injection target ${target.name}")
+        logger.debug("Created injection target ${target.id}")
 
-        injectionTargetList[target.name] = target
+        injectionTargetList[target.id] = target
+    }
+
+    def type(type) {
+        this.type = type
     }
 
     def invokeMethod(String methodName, args) {
-        if (methodName == "packagesToScan") {
-            logger.debug('processing packages...')
-            println args[0]
-            def packagesList = args[0]
-            packagesList.each { item ->
-                packagesToScan << item
-            }
-        } else if (methodName == "type") {
-            type = args[0]
-        } else {
-            logger.warning("Unknown property found: ${methodName}")
-        }
+        throw new RuntimeException("The property '$methodName' is not allowed inside a the config section")
     }
 
     def String toString() {
@@ -54,10 +42,6 @@ public class InjectionConfig implements Configuration {
         dump << "Dumping InjectionConfig\n"
         dump << "targetName:${name}\n"
         dump << "type:${type}\n"
-        dump << "packages to scan\n"
-        packagesToScan.each {item ->
-            dump << item + "\n"
-        }
         injectionTargetList.each {
             dump << it.toString() + "\n"
         }
@@ -86,22 +70,7 @@ public class InjectionConfig implements Configuration {
     }
 
     @Override
-    Configuration.InjectionTarget getInjectionTarget(String name) {
-        return injectionTargetList[name];
-    }
-
-    @Override
-    List<String> getPackagesToScan() {
-        return packages;
+    Configuration.InjectionTarget getInjectionTarget(String id) {
+        return injectionTargetList[id];
     }
 }
-
-//config = new InjectionConfig()
-//
-//script.metaClass.injector = {
-//    Closure cl -> cl.setDelegate(config)
-//        cl()
-//        println config.toString()
-//}
-//
-//script.run()

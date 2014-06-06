@@ -1,19 +1,29 @@
 package de.tlong.unnecessarywizard.groovy
 
+import org.slf4j.LoggerFactory
+
 
 /**
  * Created by tolo on 15.04.2014.
  */
 
 public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Configuration.InjectionTarget {
-    //fully qualified targetName ot the class which expects injections
-    def targetName;
+    def logger = LoggerFactory.getLogger(InjectionTarget.class)
+
+    def id;
+
+    //fully qualified name of the underlying class
+    def className
 
     //The targetName of the fields, which should be injected
-    def fields = [:]
+    def fieldList = new FieldList()
 
-    void targetName(name) {
-        targetName = name
+    void id(id) {
+        this.id = id
+    }
+
+    def className(className) {
+        this.className = className
     }
 
     /**
@@ -24,12 +34,16 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
      *
      * @return
      */
-    def invokeMethod(String fieldName, args) {
-        fields[fieldName] = args[0]
+    def invokeMethod(String methodName, args) {
+        def errorMSg = "'$methodName' is not allowed in the injection target section"
+        logger.error(errorMSg)
+        throw new RuntimeException(errorMSg)
     }
 
-    void fields(closure) {
-        closure.delegate = this
+    void fields(Closure closure) {
+        logger.debug("setting delegate of closure passed to the field section to fieldList")
+        closure.resolveStrategy = Closure.DELEGATE_FIRST
+        closure.delegate = this.fieldList
         closure()
     }
 
@@ -39,34 +53,33 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
 
         InjectionTarget that = (InjectionTarget) o
 
-        if (fields != that.fields) return false
-        if (targetName != that.targetName) return false
+        if (fieldList != that.fieldList) return false
+        if (logger != that.logger) return false
+        if (id != that.id) return false
 
         return true
     }
 
     int hashCode() {
         int result
-        result = targetName.hashCode()
-        result = 31 * result + fields.hashCode()
+        result = (logger != null ? logger.hashCode() : 0)
+        result = 31 * result + (id != null ? id.hashCode() : 0)
+        result = 31 * result + (fieldList != null ? fieldList.hashCode() : 0)
         return result
     }
 
     @Override
-    public String toString() {
-        return "InjectionTarget{" +
-                "fields=" + fields +
-                ", targetName=" + targetName +
-                '}';
+    String getId() {
+        return id
     }
 
     @Override
-    String getName() {
-        return targetName
+    String getClassName() {
+        return className
     }
 
     Map<String, Object> getFields() {
-        return fields;
+        return fieldList.getFields();
     }
 
 }

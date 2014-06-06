@@ -12,6 +12,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,8 +23,9 @@ import java.util.Map;
  * Created by tolo on 15.04.2014.
  */
 public class TestInjection {
+    Logger logger = LoggerFactory.getLogger(TestInjection.class);
+
     private static org.apache.commons.configuration.Configuration config;
-    private final String TESTSCRIPT = "testconfig.groovy";
 
     @BeforeClass
     public static void setup() throws ConfigurationException {
@@ -30,15 +33,35 @@ public class TestInjection {
     }
 
     private Wizard createWizard(String scriptName) {
-        Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);;
+        Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);
         wizard.setInjectionMethod(new SetterInjector());
-        wizard.setInstantiator(new DefaultInstantiator(wizard.getInjectionConfig().getPackagesToScan()));
+        wizard.setInstantiator(new DefaultInstantiator());
         return wizard;
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testConfigErrorInConfigSection() throws Exception {
+        try {
+            Wizard wizard = createWizard("testconfigerror.groovy");
+        } catch (RuntimeException e) {
+            logger.error("An error occured while parsing the config file", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testConfigErrorInTargetSection() throws Exception {
+        try {
+            Wizard wizard = createWizard("testconfigerrortargetsection.groovy");
+        } catch (RuntimeException e) {
+            logger.error("An error occured while parsing the config file", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     public void testInjectionConfig() {
-        Wizard wizard = createWizard(TESTSCRIPT);
+        Wizard wizard = createWizard("testconfig.groovy");
 
         Configuration injectionConfig = wizard.getInjectionConfig();
 
@@ -52,25 +75,21 @@ public class TestInjection {
         assertThat(targetList, hasSize(3));
 
         //Test single injection target
-        Configuration.InjectionTarget target = injectionConfig.getInjectionTarget("ClassA");
+        Configuration.InjectionTarget target = injectionConfig.getInjectionTarget("MyClassA");
         assertThat(target, notNullValue());
-        assertThat(target.getName(), equalTo("ClassA"));
+        assertThat(target.getId(), equalTo("MyClassA"));
+        assertThat(target.getClassName(), equalTo("my.package.ClassA"));
 
         Map<String, Object> injectableFields = target.getFields();
         assertThat(injectableFields.size(), equalTo(1));
         assertThat(injectableFields.get("fieldNameOne"), equalTo("classToInject"));
-
-        List<String> packagesToScan = injectionConfig.getPackagesToScan();
-        assertThat(packagesToScan, notNullValue());
-        assertThat(packagesToScan, hasSize(2));
-        assertThat(packagesToScan, allOf(hasItem("package.A"), hasItem("package.B")));
     }
 
     @Test
     public void testInjection() throws InstantiationException, IllegalAccessException {
         Wizard wizard = createWizard("stringinjection.groovy");
 
-        SimpleStringInjection object = wizard.createObjectGraph(SimpleStringInjection.class);
+        SimpleStringInjection object = (SimpleStringInjection)wizard.createObjectGraph("StringInjector");
 
         assertThat(object, notNullValue());
         assertThat(object.getFieldToInject(), equalTo("This string was injected"));
@@ -82,7 +101,7 @@ public class TestInjection {
     public void testPrimitiveInjection() throws Exception {
         Wizard wizard = createWizard("primitiveinjection.groovy");
 
-        SimplePrimitiveInjection object = wizard.createObjectGraph(SimplePrimitiveInjection.class);
+        SimplePrimitiveInjection object = (SimplePrimitiveInjection)wizard.createObjectGraph("Simple");
 
         assertThat(object, notNullValue());
         assertThat(object.getDoubleField(), closeTo(0.456789, 0.0000000001));
@@ -96,7 +115,7 @@ public class TestInjection {
     public void testComplexObjectInjection() throws Exception {
         Wizard wizard = createWizard("complexinjection.groovy");
 
-        ComplexObject object = wizard.createObjectGraph(ComplexObject.class);
+        ComplexObject object = (ComplexObject)wizard.createObjectGraph("ComplexObject");
 
         assertThat(object, notNullValue());
 
@@ -119,6 +138,6 @@ public class TestInjection {
         // to choose.
         
         Wizard wizard = createWizard("complexinjectionerror.groovy");
-        ComplexObject co = wizard.createObjectGraph(ComplexObject.class);
+        ComplexObject co = (ComplexObject)wizard.createObjectGraph("Failed");
     }
 }

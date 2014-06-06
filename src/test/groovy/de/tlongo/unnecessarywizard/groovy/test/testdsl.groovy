@@ -22,9 +22,6 @@ public class TestDsl {
         assertThat(config.name, equalTo("SuperInjector"))
         assertThat(config.type, equalTo("Debug"))
 
-        assertThat(config.packagesToScan, hasSize(greaterThan(0)))
-        assertThat(config.packagesToScan, hasItems(equalTo("package.A"), equalTo("package.B")))
-
         assertThat(config.injectionTargetList.size(), is(3))
     }
 }
