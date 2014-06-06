@@ -11,12 +11,6 @@ import java.util.List;
 public abstract class ClassInstantiator {
     protected Logger logger = LoggerFactory.getLogger(ClassInstantiator.class);
 
-    protected List<String> packagesToScan;
-
-    public ClassInstantiator(List<String> packagesToScan) {
-        this.packagesToScan = packagesToScan;
-    }
-
     public abstract Object instantiate(String name) throws InstantiationException;
 
     public Object instantiate(Class klass) throws InstantiationException {
