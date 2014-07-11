@@ -59,6 +59,16 @@ public class TestInjection {
         }
     }
 
+    @Test(expected = RuntimeException.class)
+    public void testConfigErrorInTargetSectionWrongInjectionMethod() throws Exception {
+        try {
+            Wizard wizard = createWizard("testconfigerrorinjectionmethod.groovy");
+        } catch (RuntimeException e) {
+            logger.error("An error occured while parsing the config file", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     public void testInjectionConfig() {
         Wizard wizard = createWizard("testconfig.groovy");
@@ -68,11 +78,11 @@ public class TestInjection {
         assertThat(injectionConfig, notNullValue());
         assertThat(injectionConfig.getConfigName(), equalTo("SuperInjector"));
         assertThat(injectionConfig.getConfigType(), equalTo("Debug"));
-        assertThat(injectionConfig.getInjectionTargetCount(), equalTo(3));
+        assertThat(injectionConfig.getInjectionTargetCount(), equalTo(4));
 
         List<Configuration.InjectionTarget> targetList = injectionConfig.getInjectionTargets();
         assertThat(targetList, notNullValue());
-        assertThat(targetList, hasSize(3));
+        assertThat(targetList, hasSize(4));
 
         //Test single injection target
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget("MyClassA");
@@ -83,6 +93,14 @@ public class TestInjection {
         Map<String, Object> injectableFields = target.getFields();
         assertThat(injectableFields.size(), equalTo(1));
         assertThat(injectableFields.get("fieldNameOne"), equalTo("classToInject"));
+
+        Configuration.InjectionTarget constructorTarget = injectionConfig.getInjectionTarget("ConstructorInjection");
+        assertThat(constructorTarget, notNullValue());
+        assertThat(constructorTarget.getInjectionMethod(), is(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR));
+        List<Object> constructorParams = constructorTarget.getConstructorParams();
+        assertThat(constructorParams, hasSize(2));
+        assertThat(constructorParams, contains( equalTo(new String("stringParam")), equalTo(new Float(23.00))));
+
     }
 
     @Test
