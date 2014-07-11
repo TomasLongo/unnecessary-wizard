@@ -9,11 +9,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * Created by tolo on 16.04.2014.
@@ -33,12 +32,19 @@ public class Wizard {
     InjectionMethod injectionMethod;
     ClassInstantiator instantiator;
 
+    Map<Configuration.InjectionTarget.InjectionMethod, InjectionMethod> injectionMethods;
+
     Reflections reflections = new Reflections("de.tlongo.unnecessarywizard");
 
     public Wizard(String configFile) {
         logger.info("Initializing the wizard with config file: " + configFile);
 
         injectionConfig = evaluateConfigScript(configFile);
+
+        injectionMethods = new HashMap<>();
+
+        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector());
+        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector());
     }
 
     public void setInjectionMethod(InjectionMethod method) {
@@ -82,6 +88,13 @@ public class Wizard {
         if (target == null) {
             throw new IllegalArgumentException(String.format("Could not find InjectionTarget for class ", id));
         }
+
+        //determine the injcetionMethod for the injection target
+        if (!injectionMethods.containsKey(target.getInjectionMethod())) {
+            throw new RuntimeException(String.format("Unknown injection method '%s' for target '%s", target.getInjectionMethod(), target.getId()));
+        }
+
+        injectionMethod = injectionMethods.get(target.getInjectionMethod());
 
         final Object targetObject = instantiator.instantiate(target.getClassName());
         Class clazz = targetObject.getClass();
