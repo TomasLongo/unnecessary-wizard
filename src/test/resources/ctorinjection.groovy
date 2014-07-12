@@ -1,8 +1,8 @@
+import de.tlongo.unneccesarywizard.java.core.Configuration
+
 /**
  * Created by tolo on 05.05.2014.
  */
-
-import de.tlong.unnecessarywizard.groovy.InjectionMethod;
 
 basePackage = "de.tlongo.unnecessarywizard.java.test.objects."
 
@@ -17,16 +17,14 @@ injector {
     // A injectionTarget is a class, which expects its dependencies to be injected
 
     injectionTarget {
-        id "ComplexObject"
-        className basePackage+"ComplexObject"
+        id "CtorInjection"
+        className basePackage+"CtorInjection"
 
-        injectionMethod InjectionMethod.CONSTRUCTOR
+        injectionMethod Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR
 
-        fields {
-            decimalValue new BigDecimal('22.3')
-            list "java.util.ArrayList"
-            sampleClass basePackage + "SampleClassToInject"
-            singleInterface ""
+        constructorParams {
+            param1 "string"
+            param2 ""
         }
     }
 }

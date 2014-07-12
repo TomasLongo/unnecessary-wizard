@@ -1,7 +1,6 @@
 package de.tlongo.unneccesarywizard.java.core;
 
 import groovy.lang.GroovyClassLoader;
-import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,58 +88,13 @@ public class Wizard {
             throw new IllegalArgumentException(String.format("Could not find InjectionTarget for class ", id));
         }
 
-        //determine the injcetionMethod for the injection target
+        //determine the injectionMethod for the injection target
         if (!injectionMethods.containsKey(target.getInjectionMethod())) {
             throw new RuntimeException(String.format("Unknown injection method '%s' for target '%s", target.getInjectionMethod(), target.getId()));
         }
 
         injectionMethod = injectionMethods.get(target.getInjectionMethod());
-
-        final Object targetObject = instantiator.instantiate(target.getClassName());
-        Class clazz = targetObject.getClass();
-
-        // Inject values into fields of target
-        target.getFields().forEach((fieldName, value) -> {
-            //TODO What is the type of 'value' here?
-            Field field = getFieldFromClass(clazz, fieldName);
-
-            if (isFieldPrimitive(field) || isFieldString(field)) {
-                // Just inject the value as is if the field is primitive
-                injectionMethod.inject(targetObject, value, fieldName);
-            } else {
-                // We have a complex object here.
-                // Grab an instance and inject it.
-                if (value instanceof String) {
-                    // The field is a complex type and the value is a string telling us what to inject
-                    Object objectToInject = null;
-
-
-                    if (!field.getType().isInterface()) {
-                        logger.debug(String.format("Field %s of type %s is not an interface.", field.getName(), field.getType().getName()));
-                        objectToInject = instantiator.instantiate((String)value);
-                    } else {
-                        logger.debug(String.format("Field %s of type %s is an interface.", field.getName(), field.getType().getName()));
-                        // We field we are injecting into is an interface
-                        if (StringUtils.isEmpty((String)value)) {
-                            // The config says that only one implementation of the interface exists.
-                            // Check it...
-                            Class klass = findSingleImplementationOfInterface(field);
-                            objectToInject = instantiator.instantiate(klass);
-                        } else {
-                            // The impl was provided in the config. Just instantiate it.
-                            objectToInject = instantiator.instantiate((String)value);
-                        }
-                    }
-
-                    injectionMethod.inject(targetObject, objectToInject, fieldName);
-                } else {
-                    // The value is an already instantiated type -> inject it directly
-                    injectionMethod.inject(targetObject, value, fieldName);
-                }
-            }
-        });
-
-        return targetObject;
+        return injectionMethod.performInjection(target);
     }
 
     /**

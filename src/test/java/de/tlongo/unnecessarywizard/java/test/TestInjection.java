@@ -1,11 +1,13 @@
 package de.tlongo.unnecessarywizard.java.test;
 
 import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import de.tlongo.unneccesarywizard.java.core.*;
 import de.tlongo.unneccesarywizard.java.core.InstantiationException;
 import de.tlongo.unnecessarywizard.java.test.objects.ComplexObject;
+import de.tlongo.unnecessarywizard.java.test.objects.CtorInjection;
 import de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection;
 import de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection;
 import org.apache.commons.configuration.ConfigurationException;
@@ -157,5 +159,16 @@ public class TestInjection {
         
         Wizard wizard = createWizard("complexinjectionerror.groovy");
         ComplexObject co = (ComplexObject)wizard.createObjectGraph("Failed");
+    }
+
+    @Test
+    public void testConstructorInjection() throws Exception {
+        Wizard wizard = createWizard("ctorinjection.groovy");
+        CtorInjection ctorInjection =(CtorInjection)wizard.createObjectGraph("CtorInjection");
+
+        assertThat(ctorInjection, notNullValue());
+        assertThat(ctorInjection.getField(), equalTo("string"));
+        assertThat(ctorInjection.getSingleInterface(), notNullValue());
+        assertThat(ctorInjection.getSingleInterface().singleMethod(), equalTo("This is the impl of the single interface"));
     }
 }
