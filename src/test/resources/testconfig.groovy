@@ -1,5 +1,7 @@
+import de.tlongo.unneccesarywizard.java.core.Configuration
+
 /**
- * Created by tolo on 15.04.2014.
+ * Created by Tomas Longo on 15.04.2014.
  */
 
 injector {
@@ -33,6 +35,17 @@ injector {
         className "my.package.ClassC"
         fields {
             fieldNameOne "classToInject"
+        }
+    }
+
+    injectionTarget {
+        id "ConstructorInjection"
+        className "my.package"
+        injectionMethod Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR
+
+        constructorParams {
+            param1 "stringParam"
+            param2 23.00f
         }
     }
 }

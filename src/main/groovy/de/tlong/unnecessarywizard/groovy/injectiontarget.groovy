@@ -1,10 +1,11 @@
 package de.tlong.unnecessarywizard.groovy
 
+import de.tlongo.unneccesarywizard.java.core.Configuration
 import org.slf4j.LoggerFactory
 
 
 /**
- * Created by tolo on 15.04.2014.
+ * Created by Tomas Longo on 15.04.2014.
  */
 
 public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Configuration.InjectionTarget {
@@ -18,12 +19,29 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
     //The targetName of the fields, which should be injected
     def fieldList = new FieldList()
 
+    // The method that is used to inject values
+    // Default is field injection
+    def injectionMethod = Configuration.InjectionTarget.InjectionMethod.SETTER
+
+    def constructorParamsArray = [] as ArrayList<Object>;
+
     void id(id) {
         this.id = id
     }
 
     def className(className) {
         this.className = className
+    }
+
+    def constructorParams(Closure closure) {
+        closure.delegate = this
+        closure.resolveStrategy = Closure.DELEGATE_FIRST
+        closure()
+    }
+
+    def injectionMethod(injectionMethod) {
+        logger.debug("setting injection method to $injectionMethod")
+        this.injectionMethod = injectionMethod
     }
 
     /**
@@ -35,13 +53,24 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
      * @return
      */
     def invokeMethod(String methodName, args) {
-        def errorMSg = "'$methodName' is not allowed in the injection target section"
-        logger.error(errorMSg)
-        throw new RuntimeException(errorMSg)
+        def regex = ~/param\d+/
+        if (regex.matcher(methodName).matches()) {
+            // This section block handles the defs of contructor params
+            // and adds them to a map
+            constructorParamsArray << args[0]
+        } else {
+            def errorMSg = "'$methodName' is not allowed in the injection target section"
+            logger.error(errorMSg)
+            throw new RuntimeException(errorMSg)
+        }
     }
 
     void fields(Closure closure) {
         logger.debug("setting delegate of closure passed to the field section to fieldList")
+        if (injectionMethod == Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR) {
+            throw new RuntimeException("Error parsing injection section. Can not inject via setter/field when " +
+                    "injection method is set 'Constructor")
+        }
         closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure.delegate = this.fieldList
         closure()
@@ -53,9 +82,11 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
 
         InjectionTarget that = (InjectionTarget) o
 
+        if (className != that.className) return false
         if (fieldList != that.fieldList) return false
-        if (logger != that.logger) return false
         if (id != that.id) return false
+        if (injectionMethod != that.injectionMethod) return false
+        if (logger != that.logger) return false
 
         return true
     }
@@ -64,7 +95,9 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
         int result
         result = (logger != null ? logger.hashCode() : 0)
         result = 31 * result + (id != null ? id.hashCode() : 0)
+        result = 31 * result + (className != null ? className.hashCode() : 0)
         result = 31 * result + (fieldList != null ? fieldList.hashCode() : 0)
+        result = 31 * result + (injectionMethod != null ? injectionMethod.hashCode() : 0)
         return result
     }
 
@@ -78,8 +111,18 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
         return className
     }
 
+    @Override
     Map<String, Object> getFields() {
         return fieldList.getFields();
     }
 
+    @Override
+    Configuration.InjectionTarget.InjectionMethod getInjectionMethod() {
+        return injectionMethod
+    }
+
+    @Override
+    List<Object> getConstructorParams() {
+        return constructorParamsArray
+    }
 }

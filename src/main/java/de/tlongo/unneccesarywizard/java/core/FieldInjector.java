@@ -11,7 +11,6 @@ import java.lang.reflect.Field;
 public class FieldInjector implements InjectionMethod {
     Logger logger = LoggerFactory.getLogger(FieldInjector.class);
 
-    @Override
     public void inject(Object target, Object value, String fieldName) {
         try {
             Field field = target.getClass().getDeclaredField(fieldName);

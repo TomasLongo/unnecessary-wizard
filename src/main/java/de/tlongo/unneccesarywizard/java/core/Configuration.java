@@ -1,5 +1,7 @@
 package de.tlongo.unneccesarywizard.java.core;
 
+import de.tlong.unnecessarywizard.groovy.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +14,11 @@ import java.util.Map;
  */
 public interface Configuration {
     public static interface InjectionTarget {
+        public enum InjectionMethod {
+            SETTER,
+            FIELD,
+            CONSTRUCTOR
+        }
         /**
          * Returns the name of this target
          */
@@ -29,6 +36,13 @@ public interface Configuration {
          * @return
          */
         Map<String, Object> getFields();
+
+        /**
+         * Returns the set injection method for this target.
+         */
+        InjectionMethod getInjectionMethod();
+
+        List<Object> getConstructorParams();
     }
 
     String getConfigName();

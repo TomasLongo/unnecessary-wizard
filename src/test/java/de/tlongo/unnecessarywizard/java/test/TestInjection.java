@@ -1,11 +1,13 @@
 package de.tlongo.unnecessarywizard.java.test;
 
 import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import de.tlongo.unneccesarywizard.java.core.*;
 import de.tlongo.unneccesarywizard.java.core.InstantiationException;
 import de.tlongo.unnecessarywizard.java.test.objects.ComplexObject;
+import de.tlongo.unnecessarywizard.java.test.objects.CtorInjection;
 import de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection;
 import de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection;
 import org.apache.commons.configuration.ConfigurationException;
@@ -59,6 +61,16 @@ public class TestInjection {
         }
     }
 
+    @Test(expected = RuntimeException.class)
+    public void testConfigErrorInTargetSectionWrongInjectionMethod() throws Exception {
+        try {
+            Wizard wizard = createWizard("testconfigerrorinjectionmethod.groovy");
+        } catch (RuntimeException e) {
+            logger.error("An error occured while parsing the config file", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     public void testInjectionConfig() {
         Wizard wizard = createWizard("testconfig.groovy");
@@ -68,11 +80,11 @@ public class TestInjection {
         assertThat(injectionConfig, notNullValue());
         assertThat(injectionConfig.getConfigName(), equalTo("SuperInjector"));
         assertThat(injectionConfig.getConfigType(), equalTo("Debug"));
-        assertThat(injectionConfig.getInjectionTargetCount(), equalTo(3));
+        assertThat(injectionConfig.getInjectionTargetCount(), equalTo(4));
 
         List<Configuration.InjectionTarget> targetList = injectionConfig.getInjectionTargets();
         assertThat(targetList, notNullValue());
-        assertThat(targetList, hasSize(3));
+        assertThat(targetList, hasSize(4));
 
         //Test single injection target
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget("MyClassA");
@@ -83,6 +95,14 @@ public class TestInjection {
         Map<String, Object> injectableFields = target.getFields();
         assertThat(injectableFields.size(), equalTo(1));
         assertThat(injectableFields.get("fieldNameOne"), equalTo("classToInject"));
+
+        Configuration.InjectionTarget constructorTarget = injectionConfig.getInjectionTarget("ConstructorInjection");
+        assertThat(constructorTarget, notNullValue());
+        assertThat(constructorTarget.getInjectionMethod(), is(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR));
+        List<Object> constructorParams = constructorTarget.getConstructorParams();
+        assertThat(constructorParams, hasSize(2));
+        assertThat(constructorParams, contains( equalTo(new String("stringParam")), equalTo(new Float(23.00))));
+
     }
 
     @Test
@@ -139,5 +159,21 @@ public class TestInjection {
         
         Wizard wizard = createWizard("complexinjectionerror.groovy");
         ComplexObject co = (ComplexObject)wizard.createObjectGraph("Failed");
+    }
+
+    @Test
+    public void testConstructorInjection() throws Exception {
+        Wizard wizard = createWizard("ctorinjection.groovy");
+        CtorInjection ctorInjection =(CtorInjection)wizard.createObjectGraph("CtorInjection");
+
+        assertThat(ctorInjection, notNullValue());
+        assertThat(ctorInjection.getField(), equalTo("string"));
+        assertThat(ctorInjection.getSingleInterface(), notNullValue());
+        assertThat(ctorInjection.getSingleInterface().singleMethod(), equalTo("This is the impl of the single interface"));
+        assertThat(ctorInjection.getFloatValue(), is(23.00f));
+        assertThat(ctorInjection.getDoubleValue(), is(23.00));
+        assertThat(ctorInjection.getIntValue(), is(23));
+        assertThat(ctorInjection.getLongValue(), is(23L));
+        assertThat(ctorInjection.getBd(), equalTo(new BigDecimal("23.00")));
     }
 }

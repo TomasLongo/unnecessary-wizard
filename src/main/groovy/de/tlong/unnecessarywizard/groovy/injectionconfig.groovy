@@ -1,6 +1,7 @@
 package de.tlong.unnecessarywizard.groovy
 
 import de.tlongo.unneccesarywizard.java.core.Configuration
+import de.tlongo.unneccesarywizard.java.core.Configuration.InjectionTarget.InjectionMethod
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -19,9 +20,10 @@ public class InjectionConfig implements Configuration {
         this.name = name
     }
 
-    def injectionTarget(closure) {
+    def injectionTarget(Closure closure) {
         InjectionTarget target = new InjectionTarget()
         closure.delegate = target;
+        closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure()
 
         logger.debug("Created injection target ${target.id}")
