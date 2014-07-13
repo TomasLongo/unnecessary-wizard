@@ -3,7 +3,7 @@ apply plugin: 'groovy'
 apply plugin: 'maven'
 
 group = 'de.tlongo'
-version = '0.3.0'
+version = '0.3-SNAPSHOT'
 
 repositories {
     mavenLocal()
