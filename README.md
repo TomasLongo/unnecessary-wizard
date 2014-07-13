@@ -12,24 +12,25 @@ a For-Loop to sum up a list of integers.
 Want to taste it?
 
     injector {
-      // The name of this injection configuration
-      name "Injection"
-  
-      // The type of this injector
+      // The name of this injector
+      name "ComplexInjection"
+
+      // The type of this injector is a jerk
       type "Debug"
-  
-      // The packages in which the classes are meant to be found
-      packagesToScan << "de.tlongo.unnecessarywizard.java.test.objects"
-  
+
       // Here comes a list of injection targets
       // A injectionTarget is a class, which expects its dependencies to be injected
-  
+
       injectionTarget {
-          targetName "de.tlongo.unnecessarywizard.java.test.objects.ComplexObject"
-          decimalValue new BigDecimal('22.3')
-          list "java.util.ArrayList"
-          sampleClass "SampleClassToInject"
-          singleInterface ""
+        id "ComplexObject"
+        className "de.tlongo.unnecessarywizard.java.test.objects.ComplexObject"
+
+        fields {
+            decimalValue new BigDecimal('22.3')
+            list "java.util.ArrayList"
+            sampleClass basePackage + "SampleClassToInject"
+            singleInterface ""
+        }
       }
     }
 
