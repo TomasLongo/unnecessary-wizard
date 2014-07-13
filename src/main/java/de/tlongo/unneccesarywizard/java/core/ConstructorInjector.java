@@ -30,41 +30,40 @@ public class ConstructorInjector implements InjectionMethod {
     public Object performInjection(Configuration.InjectionTarget target) {
         logger.debug(String.format("Using constructor injection for target %s", target.getId()));
 
-        Class targetClass;
         try {
-            targetClass = Class.forName(target.getClassName());
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+            Class targetClass = Class.forName(target.getClassName());
 
-        Constructor ctor = findConstructorForClass(targetClass, target.getConstructorParams().size());
+            Constructor ctor = findConstructorForClass(targetClass, target.getConstructorParams().size());
 
-        final Class[] ctorParamTypes = ctor.getParameterTypes();
-        final List<Object> evaluatedParams = new ArrayList<>();
+            final Class[] ctorParamTypes = ctor.getParameterTypes();
+            final List<Object> evaluatedParams = new ArrayList<>();
 
-        IntStream.range(0, ctorParamTypes.length).forEach(index -> {
-            Object ctorParam = target.getConstructorParams().get(index);
-            Class klass = ctorParamTypes[index];
-            if (isTypePrimitive(klass) || isTypePrimitive(klass)) {
-                evaluatedParams.add(ctorParam);
-            } else if(klass.isInterface()) {
-                // We have to inject an interface here
-                Class interfaceImpl;
-                if (StringUtils.isEmpty((String)ctorParam)) {
-                    // The config says, that there is only one implementation.
-                    // Check and find it...
-                    interfaceImpl = checkAndFindSingleImplementationOfInterface(klass);
-                    evaluatedParams.add(instantiator.instantiate(interfaceImpl));
+            logger.debug("Evaluating ctor params...");
+            IntStream.range(0, ctorParamTypes.length).forEach(index -> {
+                Object ctorParam = target.getConstructorParams().get(index);
+                Class klass = ctorParamTypes[index];
+                logger.debug(String.format("Found %s", klass.getName()));
+                if (isTypePrimitive(klass) || isTypePrimitive(klass)) {
+                    evaluatedParams.add(ctorParam);
+                } else if(klass.isInterface()) {
+                    // We have to inject an interface here
+                    Class interfaceImpl;
+                    if (StringUtils.isEmpty((String)ctorParam)) {
+                        // The config says, that there is only one implementation.
+                        // Check and find it...
+                        interfaceImpl = checkAndFindSingleImplementationOfInterface(klass);
+                        evaluatedParams.add(instantiator.instantiate(interfaceImpl));
+                    } else {
+                        // The implementation was provided in the config
+                        evaluatedParams.add(instantiator.instantiate((String)ctorParam));
+                    }
                 } else {
-                    // The implementation was provided in the config
-                    evaluatedParams.add(instantiator.instantiate((String)ctorParam));
+                    //The param takes an object. Instantiate it an put it into the list
+                    evaluatedParams.add(ctorParam);
                 }
-            }
-        });
+            });
 
-        logger.debug(String.format("Trying to find a ctor with %d params for class %s", target.getConstructorParams().size(), targetClass.getName()));
-
-        try {
+            logger.debug(String.format("Evaluated %d params from config", evaluatedParams.size()));
             return ctor.newInstance(evaluatedParams.toArray());
         } catch (java.lang.InstantiationException e) {
             e.printStackTrace();
@@ -75,10 +74,10 @@ public class ConstructorInjector implements InjectionMethod {
         } catch (InvocationTargetException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
-
-
-        //return targetObject;
     }
 
     private boolean isTypeString(Class klass) {
@@ -105,7 +104,21 @@ public class ConstructorInjector implements InjectionMethod {
                 klass.isPrimitive());
     }
 
-    Constructor findConstructorForClass(Class klass, int paramCount) {
+
+    /**
+     * Tries to find find a constructor for the passed class that matches a
+     * specific parameter count.
+     *
+     * Throws a RuntimeException if either no constructor was found that meets the requirement of the number of
+     * parameter or if there is more than one constructor that meets the number of parameters.
+     *
+     * @param klass         The class to find the constructor for.
+     * @param paramCount    The number of parameters that the constructor must meet.
+     *
+     * @return An invokable constructor to construct an instance of the class.
+     */
+    private Constructor findConstructorForClass(Class klass, int paramCount) {
+        logger.debug(String.format("Trying to find a ctor with %d params for class %s", paramCount, klass.getName()));
         Set<Constructor> constructors =  ReflectionUtils.getConstructors(klass, ReflectionUtils.withParametersCount(paramCount));
         if (constructors.size() == 0) {
             throw new RuntimeException(String.format("Could not find appropriate constructor for class %s", klass.getClass().getName()));

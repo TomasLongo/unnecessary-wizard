@@ -25,6 +25,11 @@ injector {
         constructorParams {
             param1 "string"
             param2 ""
+            param3 23.00f
+            param4 23.00D
+            param5 23
+            param6 23L
+            param7 new BigDecimal('23.00')
         }
     }
 }

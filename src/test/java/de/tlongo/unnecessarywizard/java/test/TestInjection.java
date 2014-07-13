@@ -170,5 +170,10 @@ public class TestInjection {
         assertThat(ctorInjection.getField(), equalTo("string"));
         assertThat(ctorInjection.getSingleInterface(), notNullValue());
         assertThat(ctorInjection.getSingleInterface().singleMethod(), equalTo("This is the impl of the single interface"));
+        assertThat(ctorInjection.getFloatValue(), is(23.00f));
+        assertThat(ctorInjection.getDoubleValue(), is(23.00));
+        assertThat(ctorInjection.getIntValue(), is(23));
+        assertThat(ctorInjection.getLongValue(), is(23L));
+        assertThat(ctorInjection.getBd(), equalTo(new BigDecimal("23.00")));
     }
 }
