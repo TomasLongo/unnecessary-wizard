@@ -13,7 +13,7 @@ import org.junit.Test
 
 
 public class TestDsl {
-    final static String RESOURCE_BASE_URI = 'src\\test\\resources\\'
+    final static String RESOURCE_BASE_URI = 'src/test/resources/'
     @Test
     public void testConfigCreation() {
         InjectionConfig config = DSL.createFromScript(RESOURCE_BASE_URI + 'testconfig.groovy')
@@ -22,6 +22,6 @@ public class TestDsl {
         assertThat(config.name, equalTo("SuperInjector"))
         assertThat(config.type, equalTo("Debug"))
 
-        assertThat(config.injectionTargetList.size(), is(3))
+        assertThat(config.injectionTargetList.size(), is(4))
     }
 }

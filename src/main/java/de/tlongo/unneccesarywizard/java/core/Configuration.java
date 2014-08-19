@@ -1,7 +1,5 @@
 package de.tlongo.unneccesarywizard.java.core;
 
-import de.tlong.unnecessarywizard.groovy.*;
-
 import java.util.List;
 import java.util.Map;
 

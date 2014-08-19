@@ -65,7 +65,7 @@ public class Wizard {
         GroovyClassLoader groovyLoader = new GroovyClassLoader(javaLoader);
 
         try {
-            Class groovyDslClass = groovyLoader.parseClass(new File("src\\main\\groovy\\de\\tlong\\unnecessarywizard\\groovy\\dsl.groovy"));
+            Class groovyDslClass = groovyLoader.parseClass(new File("src/main/groovy/de/tlong/unnecessarywizard/groovy/dsl.groovy"));
             DSLProcessor dsl = (DSLProcessor)groovyDslClass.newInstance();
 
             return dsl.createConfig(script);
