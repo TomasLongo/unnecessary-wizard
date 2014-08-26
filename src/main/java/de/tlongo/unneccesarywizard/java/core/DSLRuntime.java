@@ -8,6 +8,6 @@ package de.tlongo.unneccesarywizard.java.core;
  * The wizard uses this interface to get a Configuration
  * in order to work his injection magic.
  */
-public interface DSLProcessor {
+public interface DSLRuntime {
     Configuration createConfig(String configFile);
 }

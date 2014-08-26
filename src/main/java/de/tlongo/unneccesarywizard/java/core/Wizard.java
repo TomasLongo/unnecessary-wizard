@@ -62,8 +62,8 @@ public class Wizard {
         GroovyClassLoader groovyLoader = new GroovyClassLoader(Wizard.class.getClassLoader());
 
         try {
-            Class groovyDslClass = groovyLoader.loadClass("de.tlong.unnecessarywizard.groovy.DSL");
-            DSLProcessor dsl = (DSLProcessor)groovyDslClass.newInstance();
+            Class groovyDslRuntimeClass = groovyLoader.loadClass("de.tlong.unnecessarywizard.groovy.GroovyDSLRuntime");
+            DSLRuntime dsl = (DSLRuntime)groovyDslRuntimeClass.newInstance();
 
             return dsl.createConfig(script);
         } catch (IllegalAccessException | java.lang.InstantiationException | InstantiationException e) {
