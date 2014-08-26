@@ -5,8 +5,6 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,19 +59,20 @@ public class Wizard {
      *
      */
     private Configuration evaluateConfigScript(String script) {
-        ClassLoader javaLoader = getClass().getClassLoader();
-        GroovyClassLoader groovyLoader = new GroovyClassLoader(javaLoader);
+        GroovyClassLoader groovyLoader = new GroovyClassLoader(Wizard.class.getClassLoader());
 
         try {
-            Class groovyDslClass = groovyLoader.parseClass(new File("src/main/groovy/de/tlong/unnecessarywizard/groovy/dsl.groovy"));
-            DSLProcessor dsl = (DSLProcessor)groovyDslClass.newInstance();
+            Class groovyDslRuntimeClass = groovyLoader.loadClass("de.tlong.unnecessarywizard.groovy.GroovyDSLRuntime");
+            DSLRuntime dsl = (DSLRuntime)groovyDslRuntimeClass.newInstance();
 
             return dsl.createConfig(script);
-        } catch (IOException | IllegalAccessException | java.lang.InstantiationException | InstantiationException e) {
+        } catch (IllegalAccessException | java.lang.InstantiationException | InstantiationException e) {
             logger.error("An error occured evaluating the config script", e);
+            throw new RuntimeException("An error occured evaluating the config script", e);
+        } catch (ClassNotFoundException e) {
+            logger.error("An error occured evaluating the config script", e);
+            throw new RuntimeException("An error occured evaluating the config script", e);
         }
-
-        return null;
     }
 
     public Configuration getInjectionConfig() {

@@ -1,7 +1,7 @@
 package de.tlong.unnecessarywizard.groovy
 
 import de.tlongo.unneccesarywizard.java.core.Configuration
-import de.tlongo.unneccesarywizard.java.core.DSLProcessor
+import de.tlongo.unneccesarywizard.java.core.DSLRuntime
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory
  */
 
 
-class DSL implements DSLProcessor {
-    static Logger logger = LoggerFactory.getLogger(DSL.class)
+class GroovyDSLRuntime implements DSLRuntime {
+    static Logger logger = LoggerFactory.getLogger(GroovyDSLRuntime.class)
 
     public static Configuration createFromScript(String scriptName) {
         logger.debug("Creating configuration from script " + scriptName)
