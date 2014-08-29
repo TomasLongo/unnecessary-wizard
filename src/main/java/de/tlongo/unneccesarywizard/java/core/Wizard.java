@@ -2,14 +2,17 @@ package de.tlongo.unneccesarywizard.java.core;
 
 import groovy.lang.GroovyClassLoader;
 import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by tolo on 16.04.2014.
@@ -31,7 +34,27 @@ public class Wizard {
 
     Map<Configuration.InjectionTarget.InjectionMethod, InjectionMethod> injectionMethods;
 
-    Reflections reflections = new Reflections("de.tlongo.unnecessarywizard");
+    Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forClass(Wizard.class)).
+                                                                         setScanners(new ResourcesScanner(), new SubTypesScanner()));
+
+    public Wizard() {
+        // Search the classpath for 'wizard.groovy'
+
+        Set<URL> urlsToDefaultConfig = ClasspathHelper.forResource("wizard.groovy", Wizard.class.getClassLoader());
+        if (urlsToDefaultConfig.size() != 1) {
+            throw new RuntimeException("Problems fetching default config. Found " + urlsToDefaultConfig.size() + " configs");
+        }
+
+        URL url = (URL)(urlsToDefaultConfig.toArray()[0]);
+        logger.info(String.format("Found default config at %s", url.getPath()));
+        injectionConfig = evaluateConfigScript(url.getPath() + "wizard.groovy");
+
+        //injectionConfig = evaluateConfigScript();
+        injectionMethods = new HashMap<>();
+
+        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector());
+        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector());
+    }
 
     public Wizard(String configFile) {
         logger.info("Initializing the wizard with config file: " + configFile);

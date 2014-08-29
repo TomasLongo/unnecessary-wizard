@@ -28,6 +28,10 @@ task wrapper(type: Wrapper) {
 
 sourceSets {
     main {
+        // Change build layout so that resources get copied into a
+        // resources folder (same for test source set)
+        output.resourcesDir = "build/classes/main/resources"
+
         groovy {
             srcDirs = ['src/main/groovy', 'src/main/java']
         }
@@ -35,5 +39,9 @@ sourceSets {
         java {
             srcDirs = []
         }
+    }
+
+    test {
+        output.resourcesDir = "build/classes/test/resources"
     }
 }
