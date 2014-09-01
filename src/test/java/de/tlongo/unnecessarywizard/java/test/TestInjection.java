@@ -73,7 +73,8 @@ public class TestInjection {
 
     @Test
     public void testInjectionConfig() {
-        Wizard wizard = createWizard("testconfig.groovy");
+        // create wizard with default config 'wizard.groovy'
+        Wizard wizard = new Wizard();
 
         Configuration injectionConfig = wizard.getInjectionConfig();
 
@@ -102,7 +103,6 @@ public class TestInjection {
         List<Object> constructorParams = constructorTarget.getConstructorParams();
         assertThat(constructorParams, hasSize(2));
         assertThat(constructorParams, contains( equalTo(new String("stringParam")), equalTo(new Float(23.00))));
-
     }
 
     @Test
@@ -176,4 +176,6 @@ public class TestInjection {
         assertThat(ctorInjection.getLongValue(), is(23L));
         assertThat(ctorInjection.getBd(), equalTo(new BigDecimal("23.00")));
     }
+
+
 }
