@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.2.2'
+    compile 'org.codehaus.groovy:groovy-all:2.3.5'
     compile 'commons-configuration:commons-configuration:1.7'
     compile 'ch.qos.logback:logback-classic:1.1.1'
     compile 'org.apache.commons:commons-lang3:3.3.2'
@@ -24,4 +24,24 @@ dependencies {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.11'
+}
+
+sourceSets {
+    main {
+        // Change build layout so that resources get copied into a
+        // resources folder (same for test source set)
+        output.resourcesDir = "build/classes/main/resources"
+
+        groovy {
+            srcDirs = ['src/main/groovy', 'src/main/java']
+        }
+
+        java {
+            srcDirs = []
+        }
+    }
+
+    test {
+        output.resourcesDir = "build/classes/test/resources"
+    }
 }

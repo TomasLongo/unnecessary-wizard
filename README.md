@@ -15,7 +15,7 @@ Want to taste it?
       // The name of this injector
       name "ComplexInjection"
 
-      // The type of this injector is a jerk
+      // The type of this injector
       type "Debug"
 
       // Here comes a list of injection targets
