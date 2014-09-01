@@ -37,19 +37,23 @@ public class Wizard {
     Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forClass(Wizard.class)).
                                                                          setScanners(new ResourcesScanner(), new SubTypesScanner()));
 
+    /**
+     * Creates a wizard with the default config named 'wizard.groovy'
+     *
+     * The config must be in the classpath. If none, or more than config is found
+     * an excpetion is thrown.
+     */
     public Wizard() {
         // Search the classpath for 'wizard.groovy'
-
         Set<URL> urlsToDefaultConfig = ClasspathHelper.forResource("wizard.groovy", Wizard.class.getClassLoader());
         if (urlsToDefaultConfig.size() != 1) {
             throw new RuntimeException("Problems fetching default config. Found " + urlsToDefaultConfig.size() + " configs");
         }
 
         URL url = (URL)(urlsToDefaultConfig.toArray()[0]);
-        logger.info(String.format("Found default config at %s", url.getPath()));
+        logger.info("Found default config at %s\n", url.getPath());
         injectionConfig = evaluateConfigScript(url.getPath() + "wizard.groovy");
 
-        //injectionConfig = evaluateConfigScript();
         injectionMethods = new HashMap<>();
 
         injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector());
@@ -105,13 +109,16 @@ public class Wizard {
     public Object createObjectGraph(String id) throws IllegalAccessException, InstantiationException {
         logger.debug(String.format("creating object graph for target: ", id));
 
+        // Extract the injectiontarget from the config
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(id);
         if (target == null) {
-            throw new IllegalArgumentException(String.format("Could not find InjectionTarget for class ", id));
+            logger.error("Could not find InjectionTarget for class %s\n", id);
+            throw new IllegalArgumentException(String.format("Could not find InjectionTarget for class %s\n", id));
         }
 
-        //determine the injectionMethod for the injection target
+        //Determine the injectionMethod for the injection target
         if (!injectionMethods.containsKey(target.getInjectionMethod())) {
+            logger.error("Unknown injection method '%s' for target '%s\n", target.getInjectionMethod(), target.getId());
             throw new RuntimeException(String.format("Unknown injection method '%s' for target '%s", target.getInjectionMethod(), target.getId()));
         }
 
