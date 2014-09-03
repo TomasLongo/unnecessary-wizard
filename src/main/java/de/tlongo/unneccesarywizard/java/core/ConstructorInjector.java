@@ -5,6 +5,8 @@ import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.lang.*;
 import java.lang.reflect.Constructor;
@@ -18,7 +20,8 @@ import java.util.stream.IntStream;
  * Created by tolo on 08.07.2014.
  */
 public class ConstructorInjector implements InjectionMethod {
-    Logger logger = LoggerFactory.getLogger(ConstructorInjector.class);
+    static Marker logMarker = MarkerFactory.getMarker("Wizard");
+    static Logger logger = LoggerFactory.getLogger(ConstructorInjector.class);
 
     ClassInstantiator instantiator = new DefaultInstantiator();
 
@@ -26,7 +29,7 @@ public class ConstructorInjector implements InjectionMethod {
 
     @Override
     public Object performInjection(Configuration.InjectionTarget target) {
-        logger.debug(String.format("Using constructor injection for target %s", target.getId()));
+        logger.info(logMarker, String.format("Using constructor injection for target %s", target.getId()));
 
         try {
             Class targetClass = Class.forName(target.getClassName());
@@ -36,44 +39,42 @@ public class ConstructorInjector implements InjectionMethod {
             final Class[] ctorParamTypes = ctor.getParameterTypes();
             final List<Object> evaluatedParams = new ArrayList<>();
 
-            logger.debug("Evaluating ctor params...");
             IntStream.range(0, ctorParamTypes.length).forEach(index -> {
+                logger.info(logMarker, String.format("Injecting param%d into %s", index, target.getId()));
                 Object ctorParam = target.getConstructorParams().get(index);
                 Class klass = ctorParamTypes[index];
-                logger.debug(String.format("Found %s", klass.getName()));
+
                 if (isTypePrimitive(klass) || isTypePrimitive(klass)) {
                     evaluatedParams.add(ctorParam);
-                } else if(klass.isInterface()) {
+                } else if (klass.isInterface()) {
                     // We have to inject an interface here
                     Class interfaceImpl;
-                    if (StringUtils.isEmpty((String)ctorParam)) {
+                    if (StringUtils.isEmpty((String) ctorParam)) {
                         // The config says, that there is only one implementation.
                         // Check and find it...
                         interfaceImpl = checkAndFindSingleImplementationOfInterface(klass);
                         evaluatedParams.add(instantiator.instantiate(interfaceImpl));
                     } else {
                         // The implementation was provided in the config
-                        evaluatedParams.add(instantiator.instantiate((String)ctorParam));
+                        evaluatedParams.add(instantiator.instantiate((String) ctorParam));
                     }
                 } else {
                     //The param takes an object. Instantiate it an put it into the list
                     evaluatedParams.add(ctorParam);
                 }
             });
-
-            logger.debug(String.format("Evaluated %d params from config", evaluatedParams.size()));
             return ctor.newInstance(evaluatedParams.toArray());
         } catch (java.lang.InstantiationException e) {
-            e.printStackTrace();
+            logger.error(logMarker, "Could not instantiate type for constructor param", e);
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            logger.error(logMarker, "Could not instantiate type for constructor param", e);
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            logger.error(logMarker, "Could not instantiate type for constructor param", e);
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            logger.error(logMarker, "Could not instantiate type for constructor param", e);
             throw new RuntimeException(e);
         }
     }
@@ -116,13 +117,15 @@ public class ConstructorInjector implements InjectionMethod {
      * @return An invokable constructor to construct an instance of the class.
      */
     private Constructor findConstructorForClass(Class klass, int paramCount) {
-        logger.debug(String.format("Trying to find a ctor with %d params for class %s", paramCount, klass.getName()));
         Set<Constructor> constructors =  ReflectionUtils.getConstructors(klass, ReflectionUtils.withParametersCount(paramCount));
         if (constructors.size() == 0) {
+            logger.error(logMarker, "Could not find appropriate constructor for class %s", klass.getClass().getName());
             throw new RuntimeException(String.format("Could not find appropriate constructor for class %s", klass.getClass().getName()));
         } else if (constructors.size() > 1) {
+            logger.error(logMarker, "Found more than one possible constructor for class %s", klass.getClass().getName());
             throw new RuntimeException(String.format("Found more than one possible constructor for class %s", klass.getClass().getName()));
         }
+        logger.info(logMarker, String.format("Found ctor with %d params for class %s", paramCount, klass.getName()));
         return (Constructor)constructors.toArray()[0];
     }
 
@@ -146,11 +149,16 @@ public class ConstructorInjector implements InjectionMethod {
         List<Class> implementations = new ArrayList<>();
         implementations.addAll(reflections.getSubTypesOf(klass));
         if (implementations.size() > 1) {
+            logger.error(logMarker, String.format("Can not inject into field %s. Found more than one implementation for type %s", klass.getName(), klass.getName()));
             throw new RuntimeException(String.format("Can not inject into field %s. Found more than one implementation for type %s", klass.getName(), klass.getName()));
-        }        if (implementations.size() == 0) {
+        } else if (implementations.size() == 0) {
+            logger.error(logMarker, String.format("Can not inject into field %s. Could not find implementation for type %s", klass.getName(), klass.getName()));
             throw new RuntimeException(String.format("Can not inject into field %s. Could not find implementation for type %s", klass.getName(), klass.getName()));
         }
 
-        return (Class)(implementations.get(0));
+        Class implementationClass = (Class)(implementations.get(0));
+        logger.info(logMarker, String.format("Found implementation (%s) for interface %s", implementationClass.getName(), klass.getName()));
+
+        return implementationClass;
     }
 }

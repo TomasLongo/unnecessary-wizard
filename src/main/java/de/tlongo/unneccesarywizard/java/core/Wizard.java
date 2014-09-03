@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Created by tolo on 16.04.2014.
@@ -26,6 +25,7 @@ import java.util.regex.Pattern;
  */
 public class Wizard {
     private Configuration injectionConfig;
+
 
     Logger logger = LoggerFactory.getLogger(Wizard.class);
 
@@ -51,7 +51,7 @@ public class Wizard {
         }
 
         URL url = (URL)(urlsToDefaultConfig.toArray()[0]);
-        logger.info("Found default config at %s\n", url.getPath());
+        logger.info("Wizard", "Found default config at %s\n", url.getPath());
         injectionConfig = evaluateConfigScript(url.getPath() + "wizard.groovy");
 
         injectionMethods = new HashMap<>();
@@ -94,10 +94,10 @@ public class Wizard {
 
             return dsl.createConfig(script);
         } catch (IllegalAccessException | java.lang.InstantiationException | InstantiationException e) {
-            logger.error("An error occured evaluating the config script", e);
+            logger.error("Wizard", "An error occured evaluating the config script", e);
             throw new RuntimeException("An error occured evaluating the config script", e);
         } catch (ClassNotFoundException e) {
-            logger.error("An error occured evaluating the config script", e);
+            logger.error("Wizard", "An error occured evaluating the config script", e);
             throw new RuntimeException("An error occured evaluating the config script", e);
         }
     }
@@ -107,18 +107,18 @@ public class Wizard {
     }
 
     public Object createObjectGraph(String id) throws IllegalAccessException, InstantiationException {
-        logger.debug(String.format("creating object graph for target: ", id));
+        logger.debug("Wizard", "creating object graph for target: ", id);
 
         // Extract the injectiontarget from the config
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(id);
         if (target == null) {
-            logger.error("Could not find InjectionTarget for class %s\n", id);
+            logger.error("Wizard", "Could not find InjectionTarget for class %s\n", id);
             throw new IllegalArgumentException(String.format("Could not find InjectionTarget for class %s\n", id));
         }
 
         //Determine the injectionMethod for the injection target
         if (!injectionMethods.containsKey(target.getInjectionMethod())) {
-            logger.error("Unknown injection method '%s' for target '%s\n", target.getInjectionMethod(), target.getId());
+            logger.error("Wizard", "Unknown injection method '%s' for target '%s\n", target.getInjectionMethod(), target.getId());
             throw new RuntimeException(String.format("Unknown injection method '%s' for target '%s", target.getInjectionMethod(), target.getId()));
         }
 
@@ -146,9 +146,11 @@ public class Wizard {
         List<Class> implementations = new ArrayList<>();
         implementations.addAll(reflections.getSubTypesOf((Class)field.getType()));
         if (implementations.size() > 1) {
+            logger.error("Wizard", "Can not inject into field %s. Found more than one implementation for type %s", field.getName(), field.getType().getName());
             throw new RuntimeException(String.format("Can not inject into field %s. Found more than one implementation for type %s", field.getName(), field.getType().getName()));
         }
         if (implementations.size() == 0) {
+            logger.error("Wizard", "Can not inject into field %s. Could not find implementation for type %s", field.getName(), field.getType().getName());
             throw new RuntimeException(String.format("Can not inject into field %s. Could not find implementation for type %s", field.getName(), field.getType().getName()));
         }
 
@@ -166,6 +168,7 @@ public class Wizard {
         try {
             return klass.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
+            logger.error("Wizard", "Could not get field %s from class %s: no such field", fieldName, klass.getName());
             throw new RuntimeException(String.format("Could not get field %s from class %s: no such field", fieldName, klass.getName()));
         }
     }
