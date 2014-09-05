@@ -4,6 +4,8 @@ import de.tlongo.unneccesarywizard.java.core.Configuration
 import de.tlongo.unneccesarywizard.java.core.Configuration.InjectionTarget.InjectionMethod
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.Marker
+import org.slf4j.MarkerFactory
 
 /**
  * Created by Tomas Longo on 15.04.2014.
@@ -14,7 +16,8 @@ public class InjectionConfig implements Configuration {
     String type
     def injectionTargetList = [:]
 
-    Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
+    static Marker logMarker = MarkerFactory.getMarker("Wizard")
+    static Logger logger = LoggerFactory.getLogger(InjectionConfig.class)
 
     def name(String name) {
         this.name = name
@@ -26,7 +29,7 @@ public class InjectionConfig implements Configuration {
         closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure()
 
-        logger.debug("Created injection target ${target.id}")
+        logger.debug(logMarker, "Finished creating injection target ${target.id}")
 
         injectionTargetList[target.id] = target
     }
@@ -36,6 +39,7 @@ public class InjectionConfig implements Configuration {
     }
 
     def invokeMethod(String methodName, args) {
+        logger.error(logMarker, "The property '$methodName' is not allowed inside a the config section")
         throw new RuntimeException("The property '$methodName' is not allowed inside a the config section")
     }
 
