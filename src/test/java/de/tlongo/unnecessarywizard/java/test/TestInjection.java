@@ -6,10 +6,7 @@ import static org.hamcrest.Matchers.*;
 
 import de.tlongo.unneccesarywizard.java.core.*;
 import de.tlongo.unneccesarywizard.java.core.InstantiationException;
-import de.tlongo.unnecessarywizard.java.test.objects.ComplexObject;
-import de.tlongo.unnecessarywizard.java.test.objects.CtorInjection;
-import de.tlongo.unnecessarywizard.java.test.objects.SimplePrimitiveInjection;
-import de.tlongo.unnecessarywizard.java.test.objects.SimpleStringInjection;
+import de.tlongo.unnecessarywizard.java.test.objects.*;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.BeforeClass;
@@ -164,7 +161,7 @@ public class TestInjection {
     @Test
     public void testConstructorInjection() throws Exception {
         Wizard wizard = createWizard("ctorinjection.groovy");
-        CtorInjection ctorInjection =(CtorInjection)wizard.createObjectGraph("CtorInjection");
+        CtorInjection ctorInjection = (CtorInjection) wizard.createObjectGraph("CtorInjection");
 
         assertThat(ctorInjection, notNullValue());
         assertThat(ctorInjection.getField(), equalTo("string"));
@@ -175,7 +172,8 @@ public class TestInjection {
         assertThat(ctorInjection.getIntValue(), is(23));
         assertThat(ctorInjection.getLongValue(), is(23L));
         assertThat(ctorInjection.getBd(), equalTo(new BigDecimal("23.00")));
+
+        assertThat(ctorInjection.getSampleClassToInject(), notNullValue());
+        assertThat(ctorInjection.getSampleClassToInject().getField(), is(23));
     }
-
-
 }

@@ -13,6 +13,7 @@ public class CtorInjection {
     int intValue;
     long longValue;
     BigDecimal bd;
+    SampleClassToInject sampleClassToInject;
 
     public CtorInjection(String field,
                          SingleInterface singleInterface,
@@ -20,7 +21,8 @@ public class CtorInjection {
                          double doubleValue,
                          int intValue,
                          long longValue,
-                         BigDecimal bd) {
+                         BigDecimal bd,
+                         SampleClassToInject sampleClassToInject) {
         this.field = field;
         this.singleInterface = singleInterface;
         this.floatValue = floatValue;
@@ -28,6 +30,7 @@ public class CtorInjection {
         this.intValue = intValue;
         this.longValue = longValue;
         this.bd = bd;
+        this.sampleClassToInject = sampleClassToInject;
     }
 
     public String getField() {
@@ -56,5 +59,9 @@ public class CtorInjection {
 
     public BigDecimal getBd() {
         return bd;
+    }
+
+    public SampleClassToInject getSampleClassToInject() {
+        return sampleClassToInject;
     }
 }
