@@ -48,4 +48,13 @@ injector {
             param2 23.00f
         }
     }
+
+    injectionTarget {
+        id "MultiValueInjectionInfo"
+        className "my.pacakge"
+
+        fields {
+            fieldOne (value:"de.tlongo.MyClass", scope:Configuration.InjectionTarget.Scope.SINGLETON)
+        }
+    }
 }

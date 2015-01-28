@@ -82,42 +82,41 @@ public class SetterInjector implements InjectionMethod {
         final Object targetObject = instantiator.instantiate(target.getClassName());
         Class clazz = targetObject.getClass();
         // Inject values into fields of target
-        target.getFields().forEach((fieldName, value) -> {
-            //TODO What is the type of 'value' here?
-            Field field = getFieldFromClass(clazz, fieldName);
+        target.getFields().forEach((fieldName, configField) -> {
+            Field declaredField = getFieldFromClass(clazz, fieldName);
 
-            if (isFieldPrimitive(field) || isFieldString(field)) {
+            if (isFieldPrimitive(declaredField) || isFieldString(declaredField)) {
                 // Just inject the value as is if the field is primitive
-                injectIntoField(targetObject, value, fieldName);
+                injectIntoField(targetObject, configField.getValue(), fieldName);
             } else {
                 // We have a complex object here.
                 // Grab an instance and inject it.
-                if (value instanceof String) {
+                if (configField.getValue() instanceof String) {
                     // The field is a complex type and the value is a string telling us what to inject
                     Object objectToInject = null;
 
 
-                    if (!field.getType().isInterface()) {
-                        logger.debug(String.format("Field %s of type %s is not an interface.", field.getName(), field.getType().getName()));
-                        objectToInject = instantiator.instantiate((String)value);
+                    if (!declaredField.getType().isInterface()) {
+                        logger.debug(String.format("Field %s of type %s is not an interface.", declaredField.getName(), declaredField.getType().getName()));
+                        objectToInject = instantiator.instantiate((String)configField.getValue());
                     } else {
-                        logger.debug(String.format("Field %s of type %s is an interface.", field.getName(), field.getType().getName()));
+                        logger.debug(String.format("Field %s of type %s is an interface.", declaredField.getName(), declaredField.getType().getName()));
                         // We field we are injecting into is an interface
-                        if (StringUtils.isEmpty((String)value)) {
+                        if (StringUtils.isEmpty((String)configField.getValue())) {
                             // The config says that only one implementation of the interface exists.
                             // Check it...
-                            Class klass = checkAndFindSingleImplementationOfInterface(field);
+                            Class klass = checkAndFindSingleImplementationOfInterface(declaredField);
                             objectToInject = instantiator.instantiate(klass);
                         } else {
                             // The impl was provided in the config. Just instantiate it.
-                            objectToInject = instantiator.instantiate((String)value);
+                            objectToInject = instantiator.instantiate((String)configField.getValue());
                         }
                     }
 
                     injectIntoField(targetObject, objectToInject, fieldName);
                 } else {
                     // The value is an already instantiated type -> inject it directly
-                    injectIntoField(targetObject, value, fieldName);
+                    injectIntoField(targetObject, configField.getValue(), fieldName);
                 }
             }
         });

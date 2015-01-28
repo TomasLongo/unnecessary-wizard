@@ -78,11 +78,10 @@ public class TestInjection {
         assertThat(injectionConfig, notNullValue());
         assertThat(injectionConfig.getConfigName(), equalTo("SuperInjector"));
         assertThat(injectionConfig.getConfigType(), equalTo("Debug"));
-        assertThat(injectionConfig.getInjectionTargetCount(), equalTo(4));
 
         List<Configuration.InjectionTarget> targetList = injectionConfig.getInjectionTargets();
         assertThat(targetList, notNullValue());
-        assertThat(targetList, hasSize(4));
+        assertThat(targetList, hasSize(5));
 
         //Test single injection target
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget("MyClassA");
@@ -90,9 +89,10 @@ public class TestInjection {
         assertThat(target.getId(), equalTo("MyClassA"));
         assertThat(target.getClassName(), equalTo("my.package.ClassA"));
 
-        Map<String, Object> injectableFields = target.getFields();
+        Map<String, Field> injectableFields = target.getFields();
         assertThat(injectableFields.size(), equalTo(1));
-        assertThat(injectableFields.get("fieldNameOne"), equalTo("classToInject"));
+        assertThat(injectableFields.get("fieldNameOne").getValue(), equalTo("classToInject"));
+        assertThat(injectableFields.get("fieldNameOne").getScope(), equalTo(Configuration.InjectionTarget.Scope.INSTANCE));
 
         Configuration.InjectionTarget constructorTarget = injectionConfig.getInjectionTarget("ConstructorInjection");
         assertThat(constructorTarget, notNullValue());
@@ -100,6 +100,16 @@ public class TestInjection {
         List<Object> constructorParams = constructorTarget.getConstructorParams();
         assertThat(constructorParams, hasSize(2));
         assertThat(constructorParams, contains( equalTo(new String("stringParam")), equalTo(new Float(23.00))));
+
+        Configuration.InjectionTarget scopeTarget = injectionConfig.getInjectionTarget("MultiValueInjectionInfo");
+        assertThat(scopeTarget, notNullValue());
+        assertThat(scopeTarget.getFields().size(), equalTo(1));
+
+        Field field = scopeTarget.getFields().get("fieldOne");
+        assertThat(field, notNullValue());
+        assertThat(field.getValue(), equalTo("de.tlongo.MyClass"));
+        assertThat(field.getScope(), equalTo(Configuration.InjectionTarget.Scope.SINGLETON));
+
     }
 
     @Test
@@ -175,5 +185,27 @@ public class TestInjection {
 
         assertThat(ctorInjection.getSampleClassToInject(), notNullValue());
         assertThat(ctorInjection.getSampleClassToInject().getField(), is(23));
+    }
+
+    @Test
+    public void testScopeSingleton() throws Exception {
+        Wizard wizard = createWizard("scopesingleton.groovy");
+
+        SingletonHolder holder1 = (SingletonHolder)wizard.createObjectGraph("anotherholder");
+        Singleton singleton1 = holder1.getSingleton();
+        assertThat(holder1, notNullValue());
+        assertThat(singleton1, notNullValue());
+
+//        SingletonHolder holder2 = (SingletonHolder)wizard.createObjectGraph("SingletonHolder");
+//        Singleton singleton2 = holder2.getSingleton();
+//        assertThat(holder2, notNullValue());
+//        assertThat(singleton2, notNullValue());
+//
+//        // We are really checking for object identity here!
+//        assertThat(String.format("We did not get the very same object here: %s != %s",
+//                                  singleton1.toString(), singleton2.toString()),
+//                   singleton1 == singleton2, is(true));
+
+
     }
 }

@@ -118,7 +118,7 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
     }
 
     @Override
-    Map<String, Object> getFields() {
+    Map<String, Field> getFields() {
         return fieldList.getFields();
     }
 
