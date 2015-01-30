@@ -208,4 +208,9 @@ public class TestInjection {
 
 
     }
+
+    @Test(expected = RuntimeException.class)
+    public void testErrorDifferentScopes() throws Exception {
+        Wizard wizard = createWizard("scopeerror.groovy");
+    }
 }
