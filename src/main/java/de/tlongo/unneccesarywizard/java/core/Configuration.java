@@ -40,6 +40,8 @@ public interface Configuration {
          */
         Map<String, Field> getFields();
 
+        Field getField(String name);
+
         /**
          * Returns the set injection method for this target.
          */

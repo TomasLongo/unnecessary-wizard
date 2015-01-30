@@ -123,6 +123,11 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
     }
 
     @Override
+    de.tlongo.unneccesarywizard.java.core.Field getField(String name) {
+        return fieldList.getField(name)
+    }
+
+    @Override
     Configuration.InjectionTarget.InjectionMethod getInjectionMethod() {
         return injectionMethod
     }

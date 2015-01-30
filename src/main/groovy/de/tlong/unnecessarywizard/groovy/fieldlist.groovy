@@ -38,4 +38,8 @@ class FieldList {
     def getFields() {
         return fields
     }
+
+    def getField(name) {
+        return fields[name]
+    }
 }
