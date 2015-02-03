@@ -1,6 +1,5 @@
 package de.tlongo.unnecessarywizard.java.test;
 
-import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -95,9 +94,10 @@ public class TestInjection {
         Configuration.InjectionTarget constructorTarget = injectionConfig.getInjectionTarget("ConstructorInjection");
         assertThat(constructorTarget, notNullValue());
         assertThat(constructorTarget.getInjectionMethod(), is(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR));
-        List<Object> constructorParams = constructorTarget.getConstructorParams();
-        assertThat(constructorParams, hasSize(2));
-        assertThat(constructorParams, contains( equalTo(new String("stringParam")), equalTo(new Float(23.00))));
+        Map<String, Field> constructorParams = constructorTarget.getFields();
+        assertThat(constructorParams.size(), equalTo(2));
+        assertThat(constructorParams.get("param1").getValue(), equalTo(new String("stringParam")));
+        assertThat(constructorParams.get("param2").getValue(), equalTo(new Float(23.00)));
 
         Configuration.InjectionTarget scopeTarget = injectionConfig.getInjectionTarget("MultiValueInjectionInfo");
         assertThat(scopeTarget, notNullValue());
@@ -204,7 +204,10 @@ public class TestInjection {
                                   singleton1.toString(), singleton2.toString()),
                    singleton1 == singleton2, is(true));
 
-
+        SingletonHolder ctorInjected = (SingletonHolder)wizard.createObjectGraph("constructor");
+        assertThat(ctorInjected, notNullValue());
+        assertThat(ctorInjected.getSingleton() == singleton1, is(true));
+        assertThat(ctorInjected.getSingleton() == singleton2, is(true));
     }
 
     @Test(expected = RuntimeException.class)

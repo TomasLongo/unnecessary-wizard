@@ -31,4 +31,17 @@ injector {
             singleton (value:"de.tlongo.unnecessarywizard.java.test.objects.Singleton", scope:Configuration.InjectionTarget.Scope.SINGLETON)
         }
     }
+
+    injectionTarget {
+        id "constructor"
+        className "de.tlongo.unnecessarywizard.java.test.objects.SingletonHolder"
+
+        injectionMethod Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR
+
+        constructorParams {
+            param1 (value:"de.tlongo.unnecessarywizard.java.test.objects.Singleton", scope:Configuration.InjectionTarget.Scope.SINGLETON)
+        }
+    }
+
+
 }

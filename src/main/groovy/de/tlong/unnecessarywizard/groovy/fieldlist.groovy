@@ -18,15 +18,27 @@ class FieldList {
     def fields = [:]
 
     def invokeMethod(String fieldName, args) {
+        // We have to check if the script provides just the
+        // value to inject or if there is some additional information.
+        //
+        // e.g. fieldName(value:"lala", scope:SINGLETON)
+        //
+        // The second case is realized with named params. Groovy creates
+        // a single map in this case. We check if the
+        // argument implements an interface, and if so, if the interface
+        // is of type `Map`
+
+
         def interfaces = args[0].getClass().getInterfaces()
 
-        def infoMap = args[0]
         def field = new Field()
         field.name = fieldName
         if (interfaces.length == 1 && interfaces[0] == Map.class) {
+            def infoMap = args[0]
             field.scope = infoMap.scope
             field.value = infoMap.value
         } else {
+            // Just the value is provided. Scope default is `SINGELTON`
             field.value = args[0]
             field.scope = Configuration.InjectionTarget.Scope.INSTANCE
         }

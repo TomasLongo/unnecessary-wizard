@@ -37,8 +37,8 @@ public class ConstructorInjector extends Injector {
         try {
             Class targetClass = Class.forName(target.getClassName());
 
-            // The construtor itself
-            Constructor ctor = findConstructorForClass(targetClass, target.getConstructorParams().size());
+            // The constructor itself
+            Constructor ctor = findConstructorForClass(targetClass, target.getFields().size());
 
             // The parameters of the ctor as declared in the source
             final Class[] ctorParamTypes = ctor.getParameterTypes();
@@ -50,38 +50,45 @@ public class ConstructorInjector extends Injector {
                 logger.info(logMarker, String.format("Injecting param%d into %s", index, target.getId()));
 
                 // The value of the ctor parameter provided by the config
-                Object ctorParam = target.getConstructorParams().get(index);
+                String paramName = String.format("param%d", index+1);
+                //Object ctorParam = target.getConstructorParams().get(index);
+                Field ctorParam = target.getField(paramName);
 
                 // the current ctor param to evaluate
                 Class klass = ctorParamTypes[index];
 
                 if (isTypePrimitive(klass) || isTypeString(klass)) {
-                    logger.debug("Param is primitive");
-                    evaluatedParams.add(ctorParam);
+                    logger.debug(logMarker, "Param is primitive");
+                    evaluatedParams.add(ctorParam.getValue());
                 } else if (klass.isInterface()) {
-                    logger.debug("Param is interface");
+                    logger.debug(logMarker, "Param is interface");
                     // We have to inject an interface here
                     Class interfaceImpl;
-                    if (StringUtils.isEmpty((String) ctorParam)) {
+                    if (StringUtils.isEmpty((String) ctorParam.getValue())) {
                         // The config says, that there is only one implementation.
                         // Check and find it...
                         interfaceImpl = checkAndFindSingleImplementationOfInterface(klass);
                         evaluatedParams.add(instantiator.instantiate(interfaceImpl));
                     } else {
                         // The implementation was provided in the config
-                        evaluatedParams.add(instantiator.instantiate((String) ctorParam));
+                        evaluatedParams.add(instantiator.instantiate((String) ctorParam.getValue()));
                     }
                 } else {
-                    logger.debug("Param is object");
+                    logger.debug(logMarker, "Param is object");
 
                     // Determine if the object was already instantiated in the script, or if the classname
                     // was provided. We can do this by simply checking if we encounter a string here.
-                    if (ctorParam.getClass() == GStringImpl.class || isTypeString(ctorParam.getClass())) {
-                        logger.debug("Instantiating {}", ctorParam.toString());
-                        evaluatedParams.add(instantiator.instantiate(ctorParam.toString()));
+                    if (ctorParam.getValue().getClass() == GStringImpl.class || isTypeString(ctorParam.getValue().getClass())) {
+                        logger.debug(logMarker, "Instantiating {}", ctorParam.toString());
+                        String classToInstatiate = ctorParam.getValue().toString();
+                        if (ctorParam.getScope().equals(Configuration.InjectionTarget.Scope.SINGLETON)) {
+                            evaluatedParams.add(singletonPool.getSingleton(classToInstatiate));
+                        } else {
+                            evaluatedParams.add(instantiator.instantiate(classToInstatiate));
+                        }
                     } else {
-                        logger.debug("Object is already instantiated in script");
-                        evaluatedParams.add(ctorParam);
+                        logger.debug(logMarker, "Object is already instantiated in script");
+                        evaluatedParams.add(ctorParam.getValue());
                     }
                 }
             });
