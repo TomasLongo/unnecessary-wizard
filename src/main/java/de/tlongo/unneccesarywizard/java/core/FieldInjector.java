@@ -10,9 +10,13 @@ import java.lang.reflect.Field;
 /**
  * Created by tolo on 08.05.2014.
  */
-public class FieldInjector implements InjectionMethod {
+public class FieldInjector extends Injector {
     static Marker logMarker = MarkerFactory.getMarker("Wizard");
     static Logger logger = LoggerFactory.getLogger(FieldInjector.class);
+
+    public FieldInjector(SingletonPool singletonPool, ClassInstantiator instantiator) {
+        super(singletonPool, instantiator);
+    }
 
     public void inject(Object target, Object value, String fieldName) {
         try {
@@ -28,5 +32,10 @@ public class FieldInjector implements InjectionMethod {
             logger.error(logMarker, String.format("Can not access field %s of class %s", fieldName, target.getClass().getName()), e);
             throw new RuntimeException(String.format("Can not access field %s of class %s", fieldName, target.getClass().getName()));
         }
+    }
+
+    @Override
+    public Object performInjection(Configuration.InjectionTarget target) {
+        return null;
     }
 }

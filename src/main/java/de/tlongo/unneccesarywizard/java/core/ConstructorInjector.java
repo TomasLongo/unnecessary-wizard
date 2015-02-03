@@ -1,6 +1,7 @@
 package de.tlongo.unneccesarywizard.java.core;
 
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.groovy.runtime.GStringImpl;
 import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -19,13 +20,15 @@ import java.util.stream.IntStream;
 /**
  * Created by tolo on 08.07.2014.
  */
-public class ConstructorInjector implements InjectionMethod {
+public class ConstructorInjector extends Injector {
     static Marker logMarker = MarkerFactory.getMarker("Wizard");
     static Logger logger = LoggerFactory.getLogger(ConstructorInjector.class);
 
-    ClassInstantiator instantiator = new DefaultInstantiator();
-
     private Reflections reflections = new Reflections("de.tlongo.unnecessarywizard");
+
+    public ConstructorInjector(SingletonPool singletonPool, ClassInstantiator instantiator) {
+        super(singletonPool, instantiator);
+    }
 
     @Override
     public Object performInjection(Configuration.InjectionTarget target) {
@@ -34,33 +37,59 @@ public class ConstructorInjector implements InjectionMethod {
         try {
             Class targetClass = Class.forName(target.getClassName());
 
-            Constructor ctor = findConstructorForClass(targetClass, target.getConstructorParams().size());
+            // The constructor itself
+            Constructor ctor = findConstructorForClass(targetClass, target.getFields().size());
 
+            // The parameters of the ctor as declared in the source
             final Class[] ctorParamTypes = ctor.getParameterTypes();
+
+            // The evaluated parameters, e.g. instantiated classes
             final List<Object> evaluatedParams = new ArrayList<>();
 
             IntStream.range(0, ctorParamTypes.length).forEach(index -> {
                 logger.info(logMarker, String.format("Injecting param%d into %s", index, target.getId()));
-                Object ctorParam = target.getConstructorParams().get(index);
+
+                // The value of the ctor parameter provided by the config
+                String paramName = String.format("param%d", index+1);
+                //Object ctorParam = target.getConstructorParams().get(index);
+                Field ctorParam = target.getField(paramName);
+
+                // the current ctor param to evaluate
                 Class klass = ctorParamTypes[index];
 
-                if (isTypePrimitive(klass) || isTypePrimitive(klass)) {
-                    evaluatedParams.add(ctorParam);
+                if (isTypePrimitive(klass) || isTypeString(klass)) {
+                    logger.debug(logMarker, "Param is primitive");
+                    evaluatedParams.add(ctorParam.getValue());
                 } else if (klass.isInterface()) {
+                    logger.debug(logMarker, "Param is interface");
                     // We have to inject an interface here
                     Class interfaceImpl;
-                    if (StringUtils.isEmpty((String) ctorParam)) {
+                    if (StringUtils.isEmpty((String) ctorParam.getValue())) {
                         // The config says, that there is only one implementation.
                         // Check and find it...
                         interfaceImpl = checkAndFindSingleImplementationOfInterface(klass);
                         evaluatedParams.add(instantiator.instantiate(interfaceImpl));
                     } else {
                         // The implementation was provided in the config
-                        evaluatedParams.add(instantiator.instantiate((String) ctorParam));
+                        evaluatedParams.add(instantiator.instantiate((String) ctorParam.getValue()));
                     }
                 } else {
-                    //The param takes an object. Instantiate it an put it into the list
-                    evaluatedParams.add(ctorParam);
+                    logger.debug(logMarker, "Param is object");
+
+                    // Determine if the object was already instantiated in the script, or if the classname
+                    // was provided. We can do this by simply checking if we encounter a string here.
+                    if (ctorParam.getValue().getClass() == GStringImpl.class || isTypeString(ctorParam.getValue().getClass())) {
+                        logger.debug(logMarker, "Instantiating {}", ctorParam.toString());
+                        String classToInstatiate = ctorParam.getValue().toString();
+                        if (ctorParam.getScope().equals(Configuration.InjectionTarget.Scope.SINGLETON)) {
+                            evaluatedParams.add(singletonPool.getSingleton(classToInstatiate));
+                        } else {
+                            evaluatedParams.add(instantiator.instantiate(classToInstatiate));
+                        }
+                    } else {
+                        logger.debug(logMarker, "Object is already instantiated in script");
+                        evaluatedParams.add(ctorParam.getValue());
+                    }
                 }
             });
             return ctor.newInstance(evaluatedParams.toArray());

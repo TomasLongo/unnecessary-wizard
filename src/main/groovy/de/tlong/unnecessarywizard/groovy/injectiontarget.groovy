@@ -39,7 +39,7 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
     }
 
     def constructorParams(Closure closure) {
-        closure.delegate = this
+        closure.delegate = this.fieldList
         closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure()
     }
@@ -73,7 +73,7 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
 
     void fields(Closure closure) {
         if (injectionMethod == Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR) {
-            def errorMsg = "Error parsing injection section. Can not inject via setter/field when injection method is set 'Constructor'"
+            def errorMsg = "Error parsing injection section. Can not inject via setter/field when injection method is set to 'Constructor'"
             logger.error(errorMsg)
             throw new RuntimeException(errorMsg)
         }
@@ -118,8 +118,13 @@ public class InjectionTarget implements de.tlongo.unneccesarywizard.java.core.Co
     }
 
     @Override
-    Map<String, Object> getFields() {
+    Map<String, Field> getFields() {
         return fieldList.getFields();
+    }
+
+    @Override
+    de.tlongo.unneccesarywizard.java.core.Field getField(String name) {
+        return fieldList.getField(name)
     }
 
     @Override

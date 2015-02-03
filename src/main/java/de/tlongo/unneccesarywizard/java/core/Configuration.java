@@ -17,6 +17,11 @@ public interface Configuration {
             FIELD,
             CONSTRUCTOR
         }
+
+        public enum Scope {
+            INSTANCE,
+            SINGLETON
+        }
         /**
          * Returns the name of this target
          */
@@ -33,7 +38,9 @@ public interface Configuration {
          *
          * @return
          */
-        Map<String, Object> getFields();
+        Map<String, Field> getFields();
+
+        Field getField(String name);
 
         /**
          * Returns the set injection method for this target.
