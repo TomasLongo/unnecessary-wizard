@@ -16,13 +16,15 @@ import java.util.List;
 /**
  * Created by tolo on 08.05.2014.
  */
-public class SetterInjector implements InjectionMethod {
+public class SetterInjector extends Injector {
     static Marker logMarker = MarkerFactory.getMarker("Wizard");
     static Logger logger = LoggerFactory.getLogger(SetterInjector.class);
 
-    ClassInstantiator instantiator = new DefaultInstantiator();
-
     Reflections reflections = new Reflections("de.tlongo.unnecessarywizard");
+
+    public SetterInjector(SingletonPool singletonPool, ClassInstantiator instantiator) {
+        super(singletonPool, instantiator);
+    }
 
     /**
      * Sets the field of an object by invoking the appropriate setter on the object.
@@ -98,7 +100,11 @@ public class SetterInjector implements InjectionMethod {
 
                     if (!declaredField.getType().isInterface()) {
                         logger.debug(String.format("Field %s of type %s is not an interface.", declaredField.getName(), declaredField.getType().getName()));
-                        objectToInject = instantiator.instantiate((String)configField.getValue());
+                        if (configField.getScope().equals(Configuration.InjectionTarget.Scope.SINGLETON)) {
+                            objectToInject = singletonPool.getSingleton((String)configField.getValue());
+                        } else {
+                            objectToInject = instantiator.instantiate((String) configField.getValue());
+                        }
                     } else {
                         logger.debug(String.format("Field %s of type %s is an interface.", declaredField.getName(), declaredField.getType().getName()));
                         // We field we are injecting into is an interface

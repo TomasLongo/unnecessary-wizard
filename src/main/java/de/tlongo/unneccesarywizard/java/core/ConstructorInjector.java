@@ -20,13 +20,15 @@ import java.util.stream.IntStream;
 /**
  * Created by tolo on 08.07.2014.
  */
-public class ConstructorInjector implements InjectionMethod {
+public class ConstructorInjector extends Injector {
     static Marker logMarker = MarkerFactory.getMarker("Wizard");
     static Logger logger = LoggerFactory.getLogger(ConstructorInjector.class);
 
-    ClassInstantiator instantiator = new DefaultInstantiator();
-
     private Reflections reflections = new Reflections("de.tlongo.unnecessarywizard");
+
+    public ConstructorInjector(SingletonPool singletonPool, ClassInstantiator instantiator) {
+        super(singletonPool, instantiator);
+    }
 
     @Override
     public Object performInjection(Configuration.InjectionTarget target) {

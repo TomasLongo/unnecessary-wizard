@@ -33,8 +33,6 @@ public class TestInjection {
 
     private Wizard createWizard(String scriptName) {
         Wizard wizard = new Wizard(config.getString("resources.baseuri") + scriptName);
-        wizard.setInjectionMethod(new SetterInjector());
-        wizard.setInstantiator(new DefaultInstantiator());
         return wizard;
     }
 
@@ -196,15 +194,15 @@ public class TestInjection {
         assertThat(holder1, notNullValue());
         assertThat(singleton1, notNullValue());
 
-//        SingletonHolder holder2 = (SingletonHolder)wizard.createObjectGraph("SingletonHolder");
-//        Singleton singleton2 = holder2.getSingleton();
-//        assertThat(holder2, notNullValue());
-//        assertThat(singleton2, notNullValue());
-//
-//        // We are really checking for object identity here!
-//        assertThat(String.format("We did not get the very same object here: %s != %s",
-//                                  singleton1.toString(), singleton2.toString()),
-//                   singleton1 == singleton2, is(true));
+        SingletonHolder holder2 = (SingletonHolder)wizard.createObjectGraph("SingletonHolder");
+        Singleton singleton2 = holder2.getSingleton();
+        assertThat(holder2, notNullValue());
+        assertThat(singleton2, notNullValue());
+
+        // We are really checking for object identity here!
+        assertThat(String.format("We did not get the very same object here: %s != %s",
+                                  singleton1.toString(), singleton2.toString()),
+                   singleton1 == singleton2, is(true));
 
 
     }

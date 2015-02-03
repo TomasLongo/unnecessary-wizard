@@ -1,13 +1,20 @@
 package de.tlongo.unneccesarywizard.java.core;
 
-import java.lang.reflect.Field;
-
 /**
  * Represents a certain mechanic to inject values into fields.
  *
  * Created by Tomas Longo on 08.05.2014.
  */
-public interface InjectionMethod {
+public abstract class Injector {
+    SingletonPool singletonPool;
+
+    ClassInstantiator instantiator;
+
+    public Injector(SingletonPool singletonPool, ClassInstantiator instantiator) {
+        this.singletonPool = singletonPool;
+        this.instantiator = instantiator;
+    }
+
     /**
      * Performs injections according to the rules defined in the passed InjectionTarget
      *
@@ -15,7 +22,5 @@ public interface InjectionMethod {
      *
      * @return A Java object, that is initialised according to the specs of the injection target.
      */
-    default Object performInjection(Configuration.InjectionTarget target) {
-        return null;
-    }
+    public abstract Object performInjection(Configuration.InjectionTarget target);
 }

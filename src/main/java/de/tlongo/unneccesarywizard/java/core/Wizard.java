@@ -25,13 +25,13 @@ import java.util.*;
 public class Wizard {
     private Configuration injectionConfig;
 
+    SingletonPool singletonPool;
 
     Logger logger = LoggerFactory.getLogger(Wizard.class);
 
-    InjectionMethod injectionMethod;
     ClassInstantiator instantiator;
 
-    Map<Configuration.InjectionTarget.InjectionMethod, InjectionMethod> injectionMethods;
+    Map<Configuration.InjectionTarget.InjectionMethod, Injector> injectors;
 
     Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forClass(Wizard.class)).
                                                                          setScanners(new ResourcesScanner(), new SubTypesScanner()));
@@ -53,10 +53,10 @@ public class Wizard {
         logger.info("Wizard", "Found default config at %s\n", url.getPath());
         injectionConfig = evaluateConfigScript(url.getPath() + "wizard.groovy");
 
-        injectionMethods = new HashMap<>();
+        instantiator = new DefaultInstantiator();
+        singletonPool = new SingletonPool(instantiator);
 
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector());
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector());
+        initInjectors();
     }
 
     public Wizard(String configFile) {
@@ -64,18 +64,17 @@ public class Wizard {
 
         injectionConfig = evaluateConfigScript(configFile);
 
-        injectionMethods = new HashMap<>();
+        instantiator = new DefaultInstantiator();
+        singletonPool = new SingletonPool(instantiator);
 
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector());
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector());
+        initInjectors();
     }
 
-    public void setInjectionMethod(InjectionMethod method) {
-        this.injectionMethod = method;
-    }
+    private void initInjectors() {
+        injectors = new HashMap<>();
 
-    public void setInstantiator(ClassInstantiator instantiator) {
-        this.instantiator = instantiator;
+        injectors.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector(singletonPool, instantiator));
+        injectors.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector(singletonPool, instantiator));
     }
 
     /**
@@ -150,12 +149,12 @@ public class Wizard {
         }
 
         //Determine the injectionMethod for the injection target
-        if (!injectionMethods.containsKey(target.getInjectionMethod())) {
+        if (!injectors.containsKey(target.getInjectionMethod())) {
             logger.error("Wizard", "Unknown injection method '%s' for target '%s\n", target.getInjectionMethod(), target.getId());
             throw new RuntimeException(String.format("Unknown injection method '%s' for target '%s", target.getInjectionMethod(), target.getId()));
         }
 
-        injectionMethod = injectionMethods.get(target.getInjectionMethod());
-        return injectionMethod.performInjection(target);
+        Injector injector = injectors.get(target.getInjectionMethod());
+        return injector.performInjection(target);
     }
 }

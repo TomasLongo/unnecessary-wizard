@@ -1,5 +1,4 @@
 import de.tlongo.unneccesarywizard.java.core.Configuration
-import de.tlongo.unneccesarywizard.java.core.InjectionMethod
 
 /**
  * Created by Tomas Longo on 15.04.2014.
