@@ -9,10 +9,8 @@ import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Created by tolo on 16.04.2014.
@@ -27,12 +25,13 @@ import java.util.regex.Pattern;
 public class Wizard {
     private Configuration injectionConfig;
 
+    SingletonPool singletonPool;
+
     Logger logger = LoggerFactory.getLogger(Wizard.class);
 
-    InjectionMethod injectionMethod;
     ClassInstantiator instantiator;
 
-    Map<Configuration.InjectionTarget.InjectionMethod, InjectionMethod> injectionMethods;
+    Map<Configuration.InjectionTarget.InjectionMethod, Injector> injectors;
 
     Reflections reflections = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forClass(Wizard.class)).
                                                                          setScanners(new ResourcesScanner(), new SubTypesScanner()));
@@ -51,13 +50,13 @@ public class Wizard {
         }
 
         URL url = (URL)(urlsToDefaultConfig.toArray()[0]);
-        logger.info("Found default config at %s\n", url.getPath());
+        logger.info("Wizard", "Found default config at %s\n", url.getPath());
         injectionConfig = evaluateConfigScript(url.getPath() + "wizard.groovy");
 
-        injectionMethods = new HashMap<>();
+        instantiator = new DefaultInstantiator();
+        singletonPool = new SingletonPool(instantiator);
 
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector());
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector());
+        initInjectors();
     }
 
     public Wizard(String configFile) {
@@ -65,18 +64,17 @@ public class Wizard {
 
         injectionConfig = evaluateConfigScript(configFile);
 
-        injectionMethods = new HashMap<>();
+        instantiator = new DefaultInstantiator();
+        singletonPool = new SingletonPool(instantiator);
 
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector());
-        injectionMethods.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector());
+        initInjectors();
     }
 
-    public void setInjectionMethod(InjectionMethod method) {
-        this.injectionMethod = method;
-    }
+    private void initInjectors() {
+        injectors = new HashMap<>();
 
-    public void setInstantiator(ClassInstantiator instantiator) {
-        this.instantiator = instantiator;
+        injectors.put(Configuration.InjectionTarget.InjectionMethod.SETTER, new SetterInjector(singletonPool, instantiator));
+        injectors.put(Configuration.InjectionTarget.InjectionMethod.CONSTRUCTOR, new ConstructorInjector(singletonPool, instantiator));
     }
 
     /**
@@ -92,12 +90,46 @@ public class Wizard {
             Class groovyDslRuntimeClass = groovyLoader.loadClass("de.tlong.unnecessarywizard.groovy.GroovyDSLRuntime");
             DSLRuntime dsl = (DSLRuntime)groovyDslRuntimeClass.newInstance();
 
-            return dsl.createConfig(script);
+            Configuration config = dsl.createConfig(script);
+
+            final Set<String> singletonScope = new HashSet<>();
+            final Set<String> instanceScope = new HashSet<>();
+            config.getInjectionTargets().forEach(target -> {
+                logger.debug("Evaluating target {}", target.getId());
+                // Parse all fields to inject and check if we have some violations
+                // regarding the scopes
+                target.getFields().forEach((key, field) -> {
+                    logger.debug("Evaluating field {}", field.toString());
+
+                    if (field.getValue() instanceof String) {
+                        logger.debug("Candidate...");
+                        if (field.getScope().equals(Configuration.InjectionTarget.Scope.INSTANCE)) {
+                            if (singletonScope.contains(field.getValue())) {
+                                logger.error("Error parsing script. Target {} contains field with name {} that is injected " +
+                                        "with scope INSTANCE but was previously injected with scope SINGLETON.",
+                                        target.getId(), field.getName());
+                                throw new RuntimeException("Error parsing config");
+                            }
+                            instanceScope.add((String)field.getValue());
+                        } else if (field.getScope().equals(Configuration.InjectionTarget.Scope.SINGLETON)) {
+                            if (instanceScope.contains(field.getValue())) {
+                                logger.error("Error parsing script. Target {} contains field with name {} that is injected " +
+                                                "with scope SINGLETON but was previously injected with scope INSTANCE.",
+                                        target.getId(), field.getName());
+                                throw new RuntimeException("Error parsing config");
+                            }
+                            singletonScope.add((String)field.getValue());
+                        }
+                    }
+                });
+            });
+
+            return config;
         } catch (IllegalAccessException | java.lang.InstantiationException | InstantiationException e) {
-            logger.error("An error occured evaluating the config script", e);
+            logger.error("Wizard", "An error occured evaluating the config script", e);
             throw new RuntimeException("An error occured evaluating the config script", e);
         } catch (ClassNotFoundException e) {
-            logger.error("An error occured evaluating the config script", e);
+            logger.error("Wizard", "An error occured evaluating the config script", e);
             throw new RuntimeException("An error occured evaluating the config script", e);
         }
     }
@@ -107,87 +139,22 @@ public class Wizard {
     }
 
     public Object createObjectGraph(String id) throws IllegalAccessException, InstantiationException {
-        logger.debug(String.format("creating object graph for target: ", id));
+        logger.debug("Wizard", "creating object graph for target: ", id);
 
         // Extract the injectiontarget from the config
         Configuration.InjectionTarget target = injectionConfig.getInjectionTarget(id);
         if (target == null) {
-            logger.error("Could not find InjectionTarget for class %s\n", id);
+            logger.error("Wizard", "Could not find InjectionTarget for class %s\n", id);
             throw new IllegalArgumentException(String.format("Could not find InjectionTarget for class %s\n", id));
         }
 
         //Determine the injectionMethod for the injection target
-        if (!injectionMethods.containsKey(target.getInjectionMethod())) {
-            logger.error("Unknown injection method '%s' for target '%s\n", target.getInjectionMethod(), target.getId());
+        if (!injectors.containsKey(target.getInjectionMethod())) {
+            logger.error("Wizard", "Unknown injection method '%s' for target '%s\n", target.getInjectionMethod(), target.getId());
             throw new RuntimeException(String.format("Unknown injection method '%s' for target '%s", target.getInjectionMethod(), target.getId()));
         }
 
-        injectionMethod = injectionMethods.get(target.getInjectionMethod());
-        return injectionMethod.performInjection(target);
-    }
-
-    /**
-     * Looks for an implementation of an interface for the passed field.
-     *
-     * This method is intended to be used when the value for an interface is
-     * omited in the configuration. In that case, the wizard checks if there
-     * exists an implementation for that interface. In case it finds more than
-     * one implementation, the wizard throws an Exception since it is unable to
-     * decide which one to choose. The user has to specify it then.
-     *
-     * @param field The field, into which the implementation should be injected.
-     *              The underlying type must be an interface.
-     *
-     * @return      The class object of the found implementation.
-     */
-    private Class findSingleImplementationOfInterface(Field field) {
-        // The config says that only one implementation of the interface exists.
-        // Check it...
-        List<Class> implementations = new ArrayList<>();
-        implementations.addAll(reflections.getSubTypesOf((Class)field.getType()));
-        if (implementations.size() > 1) {
-            throw new RuntimeException(String.format("Can not inject into field %s. Found more than one implementation for type %s", field.getName(), field.getType().getName()));
-        }
-        if (implementations.size() == 0) {
-            throw new RuntimeException(String.format("Can not inject into field %s. Could not find implementation for type %s", field.getName(), field.getType().getName()));
-        }
-
-        return (Class)(implementations.get(0));
-    }
-
-    /**
-     * Gets a declared field from a class.
-     *
-     * @param klass
-     * @param fieldName
-     * @return
-     */
-    private Field getFieldFromClass(Class klass, String fieldName) {
-        try {
-            return klass.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(String.format("Could not get field %s from class %s: no such field", fieldName, klass.getName()));
-        }
-    }
-
-    private boolean isFieldString(Field field) {
-        return field.getType() == String.class;
-    }
-
-    /**
-     * Checks if a field´s type is primitve.
-     *
-     * @param field The field, which´s type should be checked.
-     *
-     * @return True if the type of the passed field is primitive.
-     *         False otherwise.
-     */
-    private boolean isFieldPrimitive(Field field) {
-        Class klass = field.getType();
-        return (klass == Integer.class  ||
-                klass == Double.class   ||
-                klass == Long.class     ||
-                klass == Float.class    ||
-                klass.isPrimitive());
+        Injector injector = injectors.get(target.getInjectionMethod());
+        return injector.performInjection(target);
     }
 }

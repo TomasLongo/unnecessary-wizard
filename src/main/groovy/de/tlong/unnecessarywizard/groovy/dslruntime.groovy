@@ -14,13 +14,14 @@ class GroovyDSLRuntime implements DSLRuntime {
     static Logger logger = LoggerFactory.getLogger(GroovyDSLRuntime.class)
 
     public static Configuration createFromScript(String scriptName) {
-        logger.debug("Creating configuration from script " + scriptName)
+        logger.info("Creating configuration from script " + scriptName)
         InjectionConfig config = new InjectionConfig()
 
         Script script = new GroovyShell().parse(new File(scriptName))
-        script.metaClass.injector = {
-            Closure cl -> cl.setDelegate(config)
-                cl()
+        script.metaClass.injector = { Closure cl ->
+            cl.resolveStrategy = Closure.DELEGATE_FIRST
+            cl.delegate = config
+            cl()
         }
         script.run()
 
